@@ -35,6 +35,7 @@ ENV/
 pyupbit/
 temp.txt
 poc/charts/
+charts/**/*
 
 # Logs
 *.log
