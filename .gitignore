@@ -37,5 +37,10 @@ temp.txt
 poc/charts/
 charts/**/*
 
+# Environment files
+.env
+.env.*
+!.env.example
+
 # Logs
 *.log
