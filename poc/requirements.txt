@@ -1,0 +1,5 @@
+pyupbit
+pandas
+matplotlib
+python-dotenv
+python-telegram-bot==20.8  # Using latest stable version 
