@@ -100,7 +100,10 @@ deactivate
 
 2. 실행:
 ```
-./run.sh
+./run.sh  # 기본 실행 (텔레그램 알림 비활성화)
+./run.sh --telegram  # 텔레그램 알림 활성화
+./run.sh -t  # 텔레그램 알림 활성화 (단축 옵션)
+./run.sh --help  # 도움말 표시
 ```
 
 3. 결과 확인:
