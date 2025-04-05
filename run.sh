@@ -39,13 +39,16 @@ source venv/bin/activate
 # 텔레그램 알림 상태 출력
 if [ "$TELEGRAM" = "true" ]; then
   echo "텔레그램 알림이 활성화되었습니다."
+  # 텔레그램 옵션을 명령줄 인자로 전달
+  TELEGRAM_OPTION="--telegram"
 else
   echo "텔레그램 알림이 비활성화되었습니다."
+  TELEGRAM_OPTION=""
 fi
 
-# 메인 프로그램 실행 (환경변수 임시 설정)
+# 메인 프로그램 실행 (명령줄 인자로 전달)
 echo "프로그램을 실행합니다..."
-ENABLE_TELEGRAM=$TELEGRAM python main.py
+python main.py $TELEGRAM_OPTION
 
 # 종료 시 가상환경 비활성화
 deactivate 

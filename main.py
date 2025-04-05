@@ -3,10 +3,18 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
 import os
+import sys
+import argparse
 from dotenv import load_dotenv
 from telegram import Bot
 import asyncio
 from typing import Optional, Dict, Any
+
+# 명령줄 인자 파싱
+def parse_args():
+    parser = argparse.ArgumentParser(description="암호화폐 가격 분석")
+    parser.add_argument("--telegram", "-t", action="store_true", help="텔레그램 알림 활성화")
+    return parser.parse_args()
 
 # Load environment variables
 load_dotenv()
@@ -24,14 +32,13 @@ UPBIT_SECRET_KEY = os.getenv('UPBIT_SECRET_KEY')
 # Telegram settings
 TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-ENABLE_TELEGRAM = os.getenv('ENABLE_TELEGRAM', 'false').lower() == 'true'
 
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-async def send_telegram_message(bot: Bot, message: str) -> None:
+async def send_telegram_message(bot: Bot, message: str, enable_telegram: bool) -> None:
     """Send message to Telegram"""
-    if not ENABLE_TELEGRAM:
+    if not enable_telegram:
         return
     
     try:
@@ -39,9 +46,9 @@ async def send_telegram_message(bot: Bot, message: str) -> None:
     except Exception as e:
         print(f"Failed to send telegram message: {e}")
 
-async def send_telegram_chart(bot: Bot, chart_path: str, caption: str) -> None:
+async def send_telegram_chart(bot: Bot, chart_path: str, caption: str, enable_telegram: bool) -> None:
     """Send chart image to Telegram"""
-    if not ENABLE_TELEGRAM:
+    if not enable_telegram:
         return
     
     try:
@@ -119,12 +126,12 @@ def format_stats_message(ticker: str, stats: Dict[str, Any]) -> str:
 📈 Volume: {stats['volume']:,}
 """
 
-async def analyze_ticker(bot: Bot, ticker: str) -> None:
+async def analyze_ticker(bot: Bot, ticker: str, enable_telegram: bool) -> None:
     """Analyze single ticker and send results to Telegram"""
     print(f"\nAnalyzing {ticker}...")
     
-    if ENABLE_TELEGRAM:
-        await send_telegram_message(bot, f"🔍 Starting analysis for {ticker}...")
+    if enable_telegram:
+        await send_telegram_message(bot, f"🔍 Starting analysis for {ticker}...", enable_telegram)
     
     # Get historical data
     df = get_historical_data(ticker)
@@ -152,16 +159,16 @@ async def analyze_ticker(bot: Bot, ticker: str) -> None:
         print(f"Chart saved: {os.path.join(CHART_SAVE_PATH, f'{ticker}_chart.png')}")
         
         # Send to Telegram if enabled
-        if ENABLE_TELEGRAM:
+        if enable_telegram:
             stats_message = format_stats_message(ticker, stats)
-            await send_telegram_chart(bot, chart_path, stats_message)
+            await send_telegram_chart(bot, chart_path, stats_message, enable_telegram)
     else:
         error_message = f"Failed to fetch data for {ticker}"
         print(error_message)
-        if ENABLE_TELEGRAM:
-            await send_telegram_message(bot, f"❌ {error_message}")
+        if enable_telegram:
+            await send_telegram_message(bot, f"❌ {error_message}", enable_telegram)
 
-async def main_async():
+async def main_async(enable_telegram: bool):
     # Create directory for saving charts
     charts_dir = os.path.join(SCRIPT_DIR, CHART_SAVE_PATH)
     os.makedirs(charts_dir, exist_ok=True)
@@ -173,23 +180,26 @@ async def main_async():
         "KRW-XRP",    # Ripple
     ]
     
-    if ENABLE_TELEGRAM:
+    if enable_telegram:
         async with Bot(token=TELEGRAM_BOT_TOKEN) as bot:
-            await send_telegram_message(bot, "🚀 Starting cryptocurrency analysis...")
+            await send_telegram_message(bot, "🚀 Starting cryptocurrency analysis...", enable_telegram)
             
             # Analyze each ticker
             for ticker in tickers:
-                await analyze_ticker(bot, ticker)
+                await analyze_ticker(bot, ticker, enable_telegram)
             
-            await send_telegram_message(bot, "✅ Analysis completed!")
+            await send_telegram_message(bot, "✅ Analysis completed!", enable_telegram)
     else:
         # Run without telegram notifications
         for ticker in tickers:
-            await analyze_ticker(None, ticker)
+            await analyze_ticker(None, ticker, enable_telegram)
 
 def main():
+    # 명령줄 인자 파싱
+    args = parse_args()
+    
     # Run the async main function
-    asyncio.run(main_async())
+    asyncio.run(main_async(args.telegram))
 
 if __name__ == "__main__":
     main() 
