@@ -97,7 +97,6 @@ chmod +x run.sh
    | 설정 | 설명 | 기본값 |
    |------|------|--------|
    | CHART_SAVE_PATH | 차트 이미지 저장 경로 | results/analysis |
-   | BACKTEST_DATA_PATH | 백테스트 데이터 저장 경로 | backtest_data |
    | BACKTEST_RESULT_PATH | 백테스트 결과 저장 경로 | results/strategy_results |
    | DEFAULT_INTERVAL | 기본 시간 간격 | day |
    | DEFAULT_COUNT | 조회할 데이터 개수 | 100 |
@@ -165,7 +164,6 @@ chmod +x run.sh
 ├── requirements.txt          # 필요 패키지 목록
 ├── run.sh                    # 실행 스크립트
 ├── setup.sh                  # 환경 설정 스크립트
-├── watch_and_test.sh         # 자동 백테스팅 스크립트
 ├── results/                  # 결과 데이터 저장 폴더
 │   ├── analysis/             # 분석 차트 저장 폴더
 │   ├── strategy_results/     # 백테스트 결과 저장 폴더

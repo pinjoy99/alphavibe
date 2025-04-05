@@ -66,7 +66,6 @@ UPBIT_ACCESS_KEY = os.getenv('UPBIT_ACCESS_KEY')
 UPBIT_SECRET_KEY = os.getenv('UPBIT_SECRET_KEY')
 
 # 백테스팅 설정
-BACKTEST_DATA_PATH = os.getenv('BACKTEST_DATA_PATH', 'backtest_data')
 BACKTEST_RESULT_PATH = os.getenv('BACKTEST_RESULT_PATH', 'results/strategy_results')
 
 # Get the directory where this script is located
