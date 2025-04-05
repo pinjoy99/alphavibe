@@ -47,9 +47,11 @@ def parse_args():
     parser.add_argument("--telegram", "-t", action="store_true", help="텔레그램 알림 활성화")
     parser.add_argument("--backtest", "-b", action="store_true", help="백테스팅 모드 활성화")
     parser.add_argument("--strategy", "-s", choices=["sma", "bb", "macd", "rsi"], default="sma", help="백테스팅 전략 선택 (기본값: sma)")
-    parser.add_argument("--period", "-p", type=str, default="3m", help="백테스팅 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)")
+    parser.add_argument("--period", "-p", type=str, default="3m", help="백테스팅 기간 또는 분석 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)")
     parser.add_argument("--invest", "-i", type=float, default=1000000, help="백테스팅 초기 투자금액 (원화)")
     parser.add_argument("--account", "-a", action="store_true", help="계좌 정보 조회")
+    parser.add_argument("--coins", "-c", type=str, default="BTC,ETH,XRP", help="분석할 코인 목록 (쉼표로 구분, 예: BTC,ETH,SOL)")
+    parser.add_argument("--interval", "-v", type=str, default="day", help="데이터 간격 (예: day, minute15, minute60)")
     return parser.parse_args()
 
 # Load environment variables
@@ -75,7 +77,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # 백테스팅 실행 함수
 # ----------------------
 
-async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool) -> None:
+async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool, interval: str = "minute60") -> None:
     """
     백테스팅 실행
     
@@ -86,14 +88,14 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         period (str): 백테스팅 기간
         initial_capital (float): 초기 투자금액
         enable_telegram (bool): 텔레그램 알림 활성화 여부
+        interval (str): 데이터 간격 (기본값: minute60)
     """
-    print(f"\n백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period})")
+    print(f"\n백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period}, 간격: {interval})")
     
     if enable_telegram:
-        await send_telegram_message(f"🔍 백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period})", enable_telegram, bot)
+        await send_telegram_message(f"🔍 백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period}, 간격: {interval})", enable_telegram, bot)
     
     # 백테스팅 데이터 조회
-    interval = "minute60"  # 1시간 간격 데이터 사용
     df = get_backtest_data(ticker, period, interval)
     
     if df is not None and not df.empty:
@@ -190,49 +192,65 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         if enable_telegram:
             await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
 
-async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool) -> None:
-    """Analyze single ticker and send results to Telegram"""
-    print(f"\nAnalyzing {ticker}...")
+async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool, interval: str = "day", period: str = "3m") -> None:
+    """
+    단일 코인 분석 수행
+    
+    Parameters:
+        bot (Optional[Bot]): 텔레그램 봇 인스턴스
+        ticker (str): 종목 심볼
+        enable_telegram (bool): 텔레그램 알림 활성화 여부
+        interval (str): 데이터 간격 (기본값: day)
+        period (str): 분석 기간 (기본값: 3m)
+    """
+    print(f"\n{ticker} 분석 중... (간격: {interval}, 기간: {period})")
     
     if enable_telegram:
-        await send_telegram_message(f"🔍 Starting analysis for {ticker}...", enable_telegram, bot)
+        await send_telegram_message(f"🔍 {ticker} 분석 시작... (간격: {interval}, 기간: {period})", enable_telegram, bot)
     
-    # Get historical data
-    df = get_historical_data(ticker)
-    
-    if df is not None and not df.empty:
-        # Prepare statistics
-        stats = {
-            'start_date': df.index[0].strftime('%Y-%m-%d'),
-            'end_date': df.index[-1].strftime('%Y-%m-%d'),
-            'highest_price': df['high'].max(),
-            'lowest_price': df['low'].min(),
-            'volume': df['volume'].sum()
-        }
+    # 데이터 조회
+    try:
+        # 기간에 맞게 데이터 조회 (백테스팅 함수 활용)
+        df = get_backtest_data(ticker, period, interval)
         
-        # Print to console
-        print("\nBasic Statistics:")
-        print(f"Start Date: {stats['start_date']}")
-        print(f"End Date: {stats['end_date']}")
-        print(f"Highest Price: {stats['highest_price']:,.0f} KRW")
-        print(f"Lowest Price: {stats['lowest_price']:,.0f} KRW")
-        print(f"Total Volume: {stats['volume']:,.0f}")
-        
-        # 시각화 모듈의 함수 사용
-        chart_dir = setup_chart_dir(CHART_SAVE_PATH)
-        
-        # 그래프 생성 전 unicode minus 설정 다시 적용
-        matplotlib.rcParams['axes.unicode_minus'] = False
-        
-        chart_path = plot_price_chart(df, ticker, chart_dir=chart_dir)
-        
-        # Send to Telegram if enabled
-        if enable_telegram:
-            # 메시지 생성과 전송을 분리된 모듈 함수 사용
-            stats_message = get_telegram_analysis_message(ticker, stats)
-            await send_telegram_chart(chart_path, stats_message, enable_telegram, bot)
-    else:
-        error_message = f"Failed to fetch data for {ticker}"
+        if df is not None and not df.empty:
+            # 기본 통계 계산
+            stats = {
+                'start_date': df.index[0].strftime('%Y-%m-%d'),
+                'end_date': df.index[-1].strftime('%Y-%m-%d'),
+                'highest_price': df['high'].max(),
+                'lowest_price': df['low'].min(),
+                'volume': df['volume'].sum()
+            }
+            
+            # 콘솔 출력
+            print("\n기본 통계:")
+            print(f"시작일: {stats['start_date']}")
+            print(f"종료일: {stats['end_date']}")
+            print(f"최고가: {stats['highest_price']:,.0f} KRW")
+            print(f"최저가: {stats['lowest_price']:,.0f} KRW")
+            print(f"총 거래량: {stats['volume']:,.0f}")
+            
+            # 차트 디렉토리 설정
+            chart_dir = setup_chart_dir(CHART_SAVE_PATH)
+            
+            # 그래프 생성 전 unicode minus 설정 다시 적용
+            matplotlib.rcParams['axes.unicode_minus'] = False
+            
+            # 차트 생성 - interval과 period 정보 전달
+            chart_path = plot_price_chart(df, ticker, chart_dir=chart_dir, interval=interval, period=period)
+            
+            # 텔레그램 알림
+            if enable_telegram:
+                stats_message = get_telegram_analysis_message(ticker, stats)
+                await send_telegram_chart(chart_path, stats_message, enable_telegram, bot)
+        else:
+            error_message = f"{ticker} 데이터 조회 실패"
+            print(error_message)
+            if enable_telegram:
+                await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
+    except Exception as e:
+        error_message = f"{ticker} 분석 중 오류 발생: {e}"
         print(error_message)
         if enable_telegram:
             await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
@@ -393,6 +411,8 @@ async def main_async(args):
     period = args.period
     initial_capital = args.invest
     enable_account = args.account
+    coins = args.coins.split(',')
+    interval = args.interval
     
     # 시각화 모듈 사용하여 차트 디렉토리 설정
     charts_dir = setup_chart_dir(CHART_SAVE_PATH)
@@ -401,22 +421,18 @@ async def main_async(args):
     if enable_backtest:
         backtest_results_dir = setup_chart_dir(BACKTEST_RESULT_PATH)
     
-    # List of tickers to analyze
-    tickers = [
-        "KRW-BTC",    # Bitcoin
-        "KRW-ETH",    # Ethereum
-        "KRW-XRP",    # Ripple
-    ]
+    # List of tickers to analyze - KRW 마켓 심볼로 변환
+    tickers = [f"KRW-{coin}" for coin in coins]
     
     # 텔레그램 봇 설정
     bot = None
     if enable_telegram:
         # 환경 변수에서 텔레그램 설정 읽기
-        TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+        TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
         
         # 텔레그램 봇 초기화
-        if TELEGRAM_BOT_TOKEN:
-            bot = Bot(token=TELEGRAM_BOT_TOKEN)
+        if TELEGRAM_TOKEN:
+            bot = Bot(token=TELEGRAM_TOKEN)
             print("텔레그램 봇이 설정되었습니다.")
         else:
             print("텔레그램 봇 토큰이 설정되지 않았습니다.")
@@ -429,35 +445,39 @@ async def main_async(args):
     if enable_telegram:
         async with bot:
             if enable_backtest:
-                await send_telegram_message("🚀 Starting cryptocurrency backtesting...", enable_telegram, bot)
+                await send_telegram_message("🚀 암호화폐 백테스팅 시작...", enable_telegram, bot)
                 
                 # 백테스팅 실행
                 for ticker in tickers:
-                    await run_backtest(bot, ticker, strategy, period, initial_capital, enable_telegram)
+                    await run_backtest(bot, ticker, strategy, period, initial_capital, enable_telegram, interval)
                 
-                await send_telegram_message("✅ Backtesting completed!", enable_telegram, bot)
+                await send_telegram_message("✅ 백테스팅 완료!", enable_telegram, bot)
             else:
-                await send_telegram_message("🚀 Starting cryptocurrency analysis...", enable_telegram, bot)
+                await send_telegram_message("🚀 암호화폐 분석 시작...", enable_telegram, bot)
                 
                 # Analyze each ticker
                 for ticker in tickers:
-                    await analyze_ticker(bot, ticker, enable_telegram)
+                    await analyze_ticker(bot, ticker, enable_telegram, interval, period)
                 
-                await send_telegram_message("✅ Analysis completed!", enable_telegram, bot)
+                await send_telegram_message("✅ 분석 완료!", enable_telegram, bot)
     else:
         # 백테스팅 모드일 경우
         if enable_backtest:
-            print("🚀 Starting cryptocurrency backtesting...")
+            print("🚀 암호화폐 백테스팅 시작...")
             
             # 백테스팅 실행
             for ticker in tickers:
-                await run_backtest(None, ticker, strategy, period, initial_capital, enable_telegram)
+                await run_backtest(None, ticker, strategy, period, initial_capital, enable_telegram, interval)
             
-            print("✅ Backtesting completed!")
+            print("✅ 백테스팅 완료!")
         else:
+            print("🚀 암호화폐 분석 시작...")
+            
             # Run without telegram notifications
             for ticker in tickers:
-                await analyze_ticker(None, ticker, enable_telegram)
+                await analyze_ticker(None, ticker, enable_telegram, interval, period)
+            
+            print("✅ 분석 완료!")
 
 def main():
     # 명령줄 인자 파싱

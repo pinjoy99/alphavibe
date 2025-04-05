@@ -112,17 +112,19 @@ def format_price_axis(ax: plt.Axes, use_log_scale: bool = False) -> None:
     # 천 단위 구분자 설정
     ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
 
-def generate_filename(prefix: str, ticker: str, strategy: Optional[str] = None, 
-                    period: Optional[str] = None, initial_capital: Optional[float] = None) -> str:
+def generate_filename(ticker: str, strategy: Optional[str] = None, 
+                    period: Optional[str] = None, initial_capital: Optional[float] = None,
+                    interval: Optional[str] = None, prefix: Optional[str] = None) -> str:
     """
-    차트 파일 이름 생성 (하위 호환성 유지용)
+    차트 파일 이름 생성
     
     Parameters:
-        prefix (str): 파일 이름 접두사 (필요 없는 경우 무시됨)
         ticker (str): 종목 심볼
         strategy (Optional[str]): 전략 이름 (선택적)
-        period (Optional[str]): 백테스팅 기간 (예: 1d, 3m, 6m, 1y)
+        period (Optional[str]): 백테스팅/분석 기간 (예: 1d, 3m, 6m, 1y)
         initial_capital (Optional[float]): 초기 투자금액
+        interval (Optional[str]): 데이터 간격 (예: day, minute15, minute60)
+        prefix (Optional[str]): 파일 이름 접두사 (선택적, 필요 없는 경우 무시됨)
         
     Returns:
         str: 생성된 파일 이름
@@ -135,6 +137,14 @@ def generate_filename(prefix: str, ticker: str, strategy: Optional[str] = None,
     
     if strategy:
         components.append(strategy)
+    
+    if interval:
+        # minute60 같은 형식을 m60 처럼 짧게 표현
+        if interval.startswith('minute'):
+            interval_short = f"m{interval[6:]}"
+            components.append(interval_short)
+        else:
+            components.append(interval)
     
     if period:
         components.append(f"p{period}")
@@ -149,8 +159,8 @@ def generate_filename(prefix: str, ticker: str, strategy: Optional[str] = None,
             capital_str = f"{int(initial_capital)}"
         components.append(f"i{capital_str}")
     
-    # prefix가 'backtest'인 경우 제외
-    if prefix != 'backtest':
+    # prefix 추가 (선택적)
+    if prefix:
         components.append(prefix)
         
     components.append(current_date)

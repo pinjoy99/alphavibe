@@ -24,7 +24,9 @@ def plot_price_chart(
     ma_periods: List[int] = [20],
     volume: bool = True,
     chart_dir: str = 'charts',
-    style: str = 'default'
+    style: str = 'default',
+    interval: str = "day",
+    period: str = "3m"
 ) -> str:
     """
     기본 가격 차트 생성
@@ -36,6 +38,8 @@ def plot_price_chart(
         volume (bool): 거래량 표시 여부
         chart_dir (str): 차트 저장 디렉토리
         style (str): 차트 스타일
+        interval (str): 데이터 간격 (예: day, minute15)
+        period (str): 분석 기간 (예: 1d, 3m)
         
     Returns:
         str: 저장된 차트 파일 경로
@@ -71,7 +75,7 @@ def plot_price_chart(
                      label=f'{period}일 이동평균')
     
     # 차트 타이틀 및 레이블
-    ax1.set_title(f'{ticker} 가격 차트', fontsize=style_config['fontsize']['title'])
+    ax1.set_title(f'{ticker} 가격 차트 ({interval}, {period})', fontsize=style_config['fontsize']['title'])
     ax1.set_ylabel('가격 (KRW)', fontsize=style_config['fontsize']['label'])
     ax1.grid(True, alpha=style_config['alpha']['grid'])
     ax1.legend(loc='best', fontsize=style_config['fontsize']['legend'])
@@ -90,8 +94,8 @@ def plot_price_chart(
         # X축 레이블은 하단 차트에만 표시
         ax1.set_xticklabels([])
     
-    # 차트 파일 이름 생성 및 저장
-    file_name = generate_filename('chart', ticker)
+    # 차트 파일 이름 생성 및 저장 - interval과 period 정보 추가
+    file_name = generate_filename(ticker=ticker, interval=interval, period=period)
     return save_chart(fig, file_name, chart_dir, style_config['dpi'])
 
 def plot_trade_signals(

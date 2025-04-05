@@ -37,7 +37,7 @@ def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") 
     Parameters:
         ticker (str): 종목 심볼 (예: "KRW-BTC")
         period_str (str): 기간 문자열 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)
-        interval (str): 시간 간격 (기본값: minute60, 기간에 따라 자동 조정 가능)
+        interval (str): 시간 간격 (기본값: minute60)
         
     Returns:
         pd.DataFrame: OHLCV 데이터
@@ -46,9 +46,12 @@ def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") 
     from_date = parse_period_to_datetime(period_str)
     to_date = datetime.now()
     
-    # 기간에 따라 적절한 간격 자동 선택
+    # 사용자가 지정한 interval을 우선 사용
+    user_interval = interval
+    
+    # 기간에 따라 적절한 간격 자동 선택 (사용자가 지정한 interval이 없을 경우)
     match = re.match(r'(\d+)([dwmy])', period_str)
-    if match:
+    if match and user_interval == "minute60":  # 사용자가 기본값을 사용한 경우에만 자동 조정
         value, unit = int(match.group(1)), match.group(2)
         
         # 6개월 이상인 경우 일봉 데이터 사용
@@ -61,6 +64,9 @@ def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") 
         elif (unit == 'm' and value >= 1) or (unit == 'w' and value >= 4):
             interval = "minute60"
         # 그 이하는 기본값 사용 (minute60)
+    else:
+        # 사용자가 지정한 interval 사용
+        interval = user_interval
     
     print(f"데이터 조회 기간: {from_date.strftime('%Y-%m-%d')} ~ {to_date.strftime('%Y-%m-%d')} (간격: {interval})")
     
@@ -86,7 +92,7 @@ def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") 
         print(f"데이터 조회 오류: {e}")
         df = pd.DataFrame()
     
-    return df 
+    return df
 
 def get_account_info() -> Optional[List[Dict[str, Any]]]:
     """
