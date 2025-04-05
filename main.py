@@ -8,7 +8,7 @@ import argparse
 from dotenv import load_dotenv
 from telegram import Bot
 import asyncio
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 import numpy as np
 import matplotlib.gridspec as gridspec
 import matplotlib.dates as mdates
@@ -24,6 +24,12 @@ from src.notification import (
     send_telegram_chart,
     get_telegram_backtest_message,
     get_telegram_analysis_message
+)
+
+# 시각화 모듈 추가
+from src.visualization import (
+    plot_price_chart,
+    setup_chart_dir
 )
 
 # 명령줄 인자 파싱
@@ -168,38 +174,6 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         if enable_telegram:
             await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
 
-def plot_price_chart(df, ticker):
-    """
-    Plot price chart
-    
-    Parameters:
-        df (DataFrame): OHLCV data
-        ticker (str): Ticker symbol
-    """
-    plt.figure(figsize=(12, 6))
-    
-    # Closing price graph
-    plt.plot(df.index, df['close'], label='Close', color='blue')
-    
-    # Moving average (20 days)
-    ma20 = df['close'].rolling(window=20).mean()
-    plt.plot(df.index, ma20, label='20-day MA', color='red')
-    
-    plt.title(f'{ticker} Price Chart')
-    plt.xlabel('Date')
-    plt.ylabel('Price (KRW)')
-    plt.legend()
-    plt.grid(True)
-    plt.xticks(rotation=45)
-    
-    # Save chart
-    save_path = os.path.join(SCRIPT_DIR, CHART_SAVE_PATH, f'{ticker}_chart.png')
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    plt.savefig(save_path, bbox_inches='tight')
-    plt.close()
-    
-    return save_path
-
 async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool) -> None:
     """Analyze single ticker and send results to Telegram"""
     print(f"\nAnalyzing {ticker}...")
@@ -228,9 +202,10 @@ async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool)
         print(f"Lowest Price: {stats['lowest_price']:,.0f} KRW")
         print(f"Total Volume: {stats['volume']:,.0f}")
         
-        # Create and save chart
-        chart_path = plot_price_chart(df, ticker)
-        print(f"Chart saved: {os.path.join(CHART_SAVE_PATH, f'{ticker}_chart.png')}")
+        # 시각화 모듈의 함수 사용
+        chart_dir = setup_chart_dir(CHART_SAVE_PATH)
+        chart_path = plot_price_chart(df, ticker, chart_dir=chart_dir)
+        print(f"Chart saved: {chart_path}")
         
         # Send to Telegram if enabled
         if enable_telegram:
@@ -251,14 +226,12 @@ async def main_async(args):
     period = args.period
     initial_capital = args.invest
     
-    # Create directory for saving charts
-    charts_dir = os.path.join(SCRIPT_DIR, CHART_SAVE_PATH)
-    os.makedirs(charts_dir, exist_ok=True)
+    # 시각화 모듈 사용하여 차트 디렉토리 설정
+    charts_dir = setup_chart_dir(CHART_SAVE_PATH)
     
     # 백테스팅 결과 디렉토리 생성
     if enable_backtest:
-        backtest_results_dir = os.path.join(SCRIPT_DIR, BACKTEST_RESULT_PATH)
-        os.makedirs(backtest_results_dir, exist_ok=True)
+        backtest_results_dir = setup_chart_dir(BACKTEST_RESULT_PATH)
     
     # List of tickers to analyze
     tickers = [

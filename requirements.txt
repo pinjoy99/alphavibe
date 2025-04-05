@@ -19,7 +19,7 @@ idna==3.10
 kiwisolver==1.4.8
 numpy==1.26.4
 packaging==24.2
-pillow==11.1.0
+pillow==9.5.0
 PyJWT==2.10.1
 pyparsing==3.2.3
 python-dateutil==2.9.0.post0
@@ -33,3 +33,4 @@ tzdata==2025.2
 tzlocal==5.3.1
 urllib3==2.3.0
 websockets==15.0.1
+koreanize-matplotlib==0.1.1

@@ -25,6 +25,8 @@ venv/
 env/
 ENV/
 
+backtest_results/
+
 # IDE
 .idea/
 .vscode/

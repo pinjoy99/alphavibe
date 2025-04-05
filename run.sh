@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# 스크립트 경로에서 절대 경로 구하기
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
 # 기본값 설정
 TELEGRAM="false"
 BACKTEST="false"
@@ -57,14 +61,14 @@ while [[ $# -gt 0 ]]; do
 done
 
 # 가상환경 존재 여부 확인
-if [ ! -d "venv" ]; then
+if [ ! -d "$SCRIPT_DIR/venv" ]; then
   echo "가상환경이 없습니다. 먼저 환경 설정을 진행합니다..."
-  ./setup.sh
+  "$SCRIPT_DIR/setup.sh"
   echo "환경 설정이 완료되었습니다."
 fi
 
 # 가상환경 활성화
-source venv/bin/activate
+source "$SCRIPT_DIR/venv/bin/activate"
 
 # 명령줄 옵션 구성
 OPTIONS=""
@@ -89,7 +93,9 @@ fi
 
 # 메인 프로그램 실행 (명령줄 인자로 전달)
 echo "프로그램을 실행합니다..."
-python main.py $OPTIONS
+python "$SCRIPT_DIR/main.py" $OPTIONS
 
-# 종료 시 가상환경 비활성화
-deactivate 
+# 종료 시 가상환경 비활성화 (가상환경이 활성화되어 있으면 비활성화)
+if [ -n "$VIRTUAL_ENV" ]; then
+  deactivate
+fi 
