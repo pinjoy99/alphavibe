@@ -370,8 +370,8 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
     axes[0].scatter(buy_signals.index, buy_signals['close'], marker='^', color='green', s=100, label='Buy Signal')
     axes[0].scatter(sell_signals.index, sell_signals['close'], marker='v', color='red', s=100, label='Sell Signal')
     
-    axes[0].set_title(f'{ticker} 가격 및 거래 신호')
-    axes[0].set_ylabel('가격 (KRW)')
+    axes[0].set_title(f'{ticker} Price Chart and Signals')
+    axes[0].set_ylabel('Price (KRW)')
     axes[0].legend()
     axes[0].grid(True)
     
@@ -385,9 +385,9 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
                          where=(results_df['asset_value'] < results_df['asset_value'].cummax()), 
                          color='red', alpha=0.3, label='Drawdown')
     
-    axes[1].set_title('자산 가치 변화')
-    axes[1].set_ylabel('자산 가치 (KRW)')
-    axes[1].set_xlabel('날짜')
+    axes[1].set_title('Asset Value Change')
+    axes[1].set_ylabel('Asset Value (KRW)')
+    axes[1].set_xlabel('Date')
     axes[1].legend()
     axes[1].grid(True)
     
@@ -397,9 +397,9 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
     max_drawdown = results['max_drawdown_pct']
     trade_count = results['trade_count']
     
-    plt.suptitle(f'{ticker} 백테스팅 결과 ({results["start_date"]} ~ {results["end_date"]})\n'
-                f'총 수익률: {total_return:.2f}%, 연간 수익률: {annual_return:.2f}%, '
-                f'최대 낙폭: {max_drawdown:.2f}%, 거래 횟수: {trade_count}',
+    plt.suptitle(f'{ticker} Backtest Results ({results["start_date"]} ~ {results["end_date"]})\n'
+                f'Total Return: {total_return:.2f}%, Annual Return: {annual_return:.2f}%, '
+                f'Max Drawdown: {max_drawdown:.2f}%, Trades: {trade_count}',
                 fontsize=14)
     
     plt.tight_layout()
