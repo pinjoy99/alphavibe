@@ -4,13 +4,14 @@ from .sma_strategy import SMAStrategy
 from .bb_strategy import BollingerBandsStrategy
 from .macd_strategy import MACDStrategy
 from .rsi_strategy import RSIStrategy
+from .sma_stoploss_strategy import SMAStopLossStrategy
 
 def create_strategy(strategy_name: str, **kwargs) -> Optional[BaseStrategy]:
     """
     전략 이름에 따라 적절한 전략 객체 생성
     
     Parameters:
-        strategy_name (str): 전략 이름 ('sma', 'bb', 'macd', 'rsi')
+        strategy_name (str): 전략 이름 ('sma', 'bb', 'macd', 'rsi', 'sma_stoploss')
         **kwargs: 전략별 파라미터
         
     Returns:
@@ -20,7 +21,8 @@ def create_strategy(strategy_name: str, **kwargs) -> Optional[BaseStrategy]:
         "sma": SMAStrategy,
         "bb": BollingerBandsStrategy,
         "macd": MACDStrategy,
-        "rsi": RSIStrategy
+        "rsi": RSIStrategy,
+        "sma_stoploss": SMAStopLossStrategy
     }
     
     strategy_class = strategies.get(strategy_name.lower())
@@ -48,6 +50,11 @@ def create_strategy(strategy_name: str, **kwargs) -> Optional[BaseStrategy]:
         filtered_params = {
             k: v for k, v in kwargs.items() 
             if k in ["window", "overbought", "oversold"]
+        }
+    elif strategy_name.lower() == "sma_stoploss":
+        filtered_params = {
+            k: v for k, v in kwargs.items() 
+            if k in ["short_window", "long_window", "take_profit", "stop_loss"]
         }
     else:
         filtered_params = {}

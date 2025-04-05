@@ -46,7 +46,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="암호화폐 가격 분석")
     parser.add_argument("--telegram", "-t", action="store_true", help="텔레그램 알림 활성화")
     parser.add_argument("--backtest", "-b", action="store_true", help="백테스팅 모드 활성화")
-    parser.add_argument("--strategy", "-s", choices=["sma", "bb", "macd", "rsi"], default="sma", help="백테스팅 전략 선택 (기본값: sma)")
+    parser.add_argument("--strategy", "-s", choices=["sma", "bb", "macd", "rsi", "sma_stoploss"], default="sma", help="백테스팅 전략 선택 (기본값: sma)")
     parser.add_argument("--period", "-p", type=str, default="3m", help="백테스팅 기간 또는 분석 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)")
     parser.add_argument("--invest", "-i", type=float, default=1000000, help="백테스팅 초기 투자금액 (원화)")
     parser.add_argument("--account", "-a", action="store_true", help="계좌 정보 조회")
@@ -131,6 +131,14 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                 "exit_overbought": 55,
                 "exit_oversold": 45
             }
+        elif strategy == "sma_stoploss":
+            # SMA+손익절 전략 파라미터
+            strategy_params = {
+                "short_window": 10,
+                "long_window": 30,
+                "take_profit": 0.10,  # 10% 익절
+                "stop_loss": 0.03     # 3% 손절
+            }
         
         # 전략 객체 생성 및 적용
         strategy_obj = create_strategy(strategy, **strategy_params)
@@ -192,6 +200,8 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                     params_str = f"(단기: {strategy_params['short_window']}, 장기: {strategy_params['long_window']}, 시그널: {strategy_params['signal_window']})"
                 elif strategy == "rsi":
                     params_str = f"(기간: {strategy_params['window']}, 과매수: {strategy_params['overbought']}, 과매도: {strategy_params['oversold']}, 매도종료: {strategy_params['exit_overbought']}, 매수종료: {strategy_params['exit_oversold']})"
+                elif strategy == "sma_stoploss":
+                    params_str = f"(단기: {strategy_params['short_window']}, 장기: {strategy_params['long_window']}, 익절: {strategy_params['take_profit']*100}%, 손절: {strategy_params['stop_loss']*100}%)"
                 
                 # 메시지 생성과 전송을 분리된 모듈 함수 사용
                 result_message = get_telegram_backtest_message(ticker, strategy_obj.name, params_str, results)
