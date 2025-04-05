@@ -22,6 +22,15 @@ def backtest_strategy(df: pd.DataFrame, initial_capital: float) -> Dict[str, Any
     Returns:
         Dict[str, Any]: 백테스팅 결과
     """
+    # 데이터 전처리 - NaN 값이 있는 행 제거
+    required_columns = ['signal', 'position']
+    df = df.copy()
+    
+    # NaN 체크 및 경고
+    nan_rows = df[required_columns].isna().any(axis=1).sum()
+    if nan_rows > 0:
+        print(f"경고: 데이터에 {nan_rows}개의 NaN 행이 있습니다. 이 행들은 백테스팅에서 무시됩니다.")
+    
     # 기본 변수 초기화
     position = 0  # 0: 매수 없음, 1: 매수
     cash = initial_capital
@@ -41,6 +50,20 @@ def backtest_strategy(df: pd.DataFrame, initial_capital: float) -> Dict[str, Any
         date = df.index[i]
         # 정수 인덱스 대신 .iloc 사용하여 경고 제거
         price = df['close'].iloc[i]
+        
+        # NaN 값 처리 - signal 또는 position이 NaN인 경우 신호 무시
+        if pd.isna(df['signal'].iloc[i]) or pd.isna(df['position'].iloc[i]):
+            # 현재 상태 유지하며 자산 가치만 업데이트
+            coin_value = coin_amount * price
+            asset_value = cash + coin_value
+            
+            # 결과 저장
+            dates.append(date)
+            cash_history.append(cash)
+            asset_history.append(asset_value)
+            position_history.append(position)
+            continue
+            
         signal = df['signal'].iloc[i]
         
         # 당일 자산 가치 계산 (현금 + 코인 가치)

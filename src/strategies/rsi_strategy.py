@@ -22,6 +22,10 @@ class RSIStrategy(BaseStrategy):
         self._exit_overbought = exit_overbought
         self._exit_oversold = exit_oversold
     
+    def get_min_required_rows(self) -> int:
+        """RSI 전략에 필요한 최소 데이터 행 수"""
+        return self._window + 10  # RSI 계산 + 충분한 거래 공간
+    
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         RSI 전략 적용 - 개선된 진입/퇴출 전략
@@ -32,10 +36,10 @@ class RSIStrategy(BaseStrategy):
         Returns:
             pd.DataFrame: 신호가 추가된 데이터프레임
         """
-        # 복사본을 생성하여 원본 데이터 보존
-        df = df.copy()
+        # 1. 데이터 유효성 검사
+        df = self.validate_data(df).copy()
         
-        # RSI 계산
+        # 2. RSI 계산
         delta = df['close'].diff()
         gain = delta.where(delta > 0, 0)
         loss = -delta.where(delta < 0, 0)
@@ -47,46 +51,60 @@ class RSIStrategy(BaseStrategy):
         rs = avg_gain / avg_loss
         df['rsi'] = 100 - (100 / (1 + rs))
         
-        # 신호 초기화
+        # 3. 신호 초기화
         df['signal'] = 0
         
-        # 포지션 추적 변수 (0: 없음, 1: 매수 포지션)
+        # 4. 유효한 데이터 확인
+        valid_idx = df['rsi'].notna()
+        
+        # 5. 포지션 추적 변수 (0: 없음, 1: 매수 포지션)
         position = 0
         
-        for i in range(self._window, len(df)):
-            current_rsi = df['rsi'].iloc[i]
+        # 6. 유효한 데이터에만 신호 적용
+        valid_rows = df[valid_idx]
+        for i in range(len(valid_rows)):
+            idx = valid_rows.index[i]
+            current_rsi = valid_rows['rsi'].iloc[i]
             
             if position == 0:  # 현재 포지션 없음
                 if current_rsi < self._oversold:
                     # 과매도 상태에서 매수 신호
-                    df.loc[df.index[i], 'signal'] = 1
+                    df.loc[idx, 'signal'] = 1
                     position = 1
                 elif current_rsi > self._overbought:
                     # 과매수 상태에서 매도 신호 (숏 포지션)
-                    df.loc[df.index[i], 'signal'] = -1
+                    df.loc[idx, 'signal'] = -1
                     position = -1
             
             elif position == 1:  # 매수 포지션 보유
                 if current_rsi > self._exit_oversold:
                     # 매수 포지션 청산
-                    df.loc[df.index[i], 'signal'] = -1
+                    df.loc[idx, 'signal'] = -1
                     position = 0
                     
                     # 즉시 과매수 조건 확인
                     if current_rsi > self._overbought:
-                        df.loc[df.index[i], 'signal'] = -1
+                        df.loc[idx, 'signal'] = -1
                         position = -1
             
             elif position == -1:  # 매도 포지션 보유 (숏)
                 if current_rsi < self._exit_overbought:
                     # 매도 포지션 청산
-                    df.loc[df.index[i], 'signal'] = 1
+                    df.loc[idx, 'signal'] = 1
                     position = 0
                     
                     # 즉시 과매도 조건 확인
                     if current_rsi < self._oversold:
-                        df.loc[df.index[i], 'signal'] = 1
+                        df.loc[idx, 'signal'] = 1
                         position = 1
+        
+        # 7. 신호 변화 감지
+        df['position'] = df['signal'].diff()
+        
+        # 8. 첫 번째 유효한 신호에 대한 포지션 직접 설정
+        first_valid_signal_idx = df[valid_idx & (df['signal'] != 0)].index[0] if not df[valid_idx & (df['signal'] != 0)].empty else None
+        if first_valid_signal_idx is not None:
+            df.loc[first_valid_signal_idx, 'position'] = df.loc[first_valid_signal_idx, 'signal']
         
         return df
     

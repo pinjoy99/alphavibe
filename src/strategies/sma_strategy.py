@@ -14,6 +14,10 @@ class SMAStrategy(BaseStrategy):
         self._short_window = short_window
         self._long_window = long_window
     
+    def get_min_required_rows(self) -> int:
+        """SMA 전략에 필요한 최소 데이터 행 수"""
+        return self._long_window + 5  # 충분한 데이터 보장
+    
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         단순 이동평균선(SMA) 전략 적용
@@ -24,20 +28,28 @@ class SMAStrategy(BaseStrategy):
         Returns:
             pd.DataFrame: 신호가 추가된 데이터프레임
         """
-        # 복사본을 생성하여 원본 데이터 보존
-        df = df.copy()
+        # 1. 데이터 유효성 검사
+        df = self.validate_data(df).copy()
         
-        # 단기/장기 이동평균선 계산
+        # 2. 단기/장기 이동평균선 계산
         df['short_ma'] = df['close'].rolling(window=self._short_window).mean()
         df['long_ma'] = df['close'].rolling(window=self._long_window).mean()
         
-        # 신호 생성
+        # 3. 기본 신호 설정
         df['signal'] = 0
-        df.loc[df['short_ma'] > df['long_ma'], 'signal'] = 1  # 매수 신호
-        df.loc[df['short_ma'] < df['long_ma'], 'signal'] = -1  # 매도 신호
         
-        # 신호 변화 감지
+        # 4. 유효한 데이터에만 신호 적용 (NaN 값 처리)
+        valid_idx = df['short_ma'].notna() & df['long_ma'].notna()
+        df.loc[valid_idx & (df['short_ma'] > df['long_ma']), 'signal'] = 1  # 매수 신호
+        df.loc[valid_idx & (df['short_ma'] < df['long_ma']), 'signal'] = -1  # 매도 신호
+        
+        # 5. 신호 변화 감지
         df['position'] = df['signal'].diff()
+        
+        # 6. 첫 번째 유효한 신호에 대한 포지션 직접 설정
+        first_valid_idx = df[valid_idx].index[0] if not df[valid_idx].empty else None
+        if first_valid_idx is not None:
+            df.loc[first_valid_idx, 'position'] = df.loc[first_valid_idx, 'signal']
         
         return df
     
