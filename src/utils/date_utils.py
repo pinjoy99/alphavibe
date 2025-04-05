@@ -41,10 +41,10 @@ def parse_period_to_datetime(period_str: str) -> datetime:
 def format_timestamp(dt: Optional[datetime] = None, 
                      format_str: str = "%Y-%m-%d %H:%M:%S") -> str:
     """
-    datetime 객체를 지정된 포맷으로 문자열 변환
+    datetime 객체 또는 ISO 8601 형식의 문자열을 지정된 포맷으로 변환
     
     Parameters:
-        dt (Optional[datetime]): 변환할 datetime 객체 (기본값: 현재 시간)
+        dt (Optional[datetime]): datetime 객체 또는 ISO 8601 문자열 (기본값: 현재 시간)
         format_str (str): 날짜/시간 포맷 문자열
         
     Returns:
@@ -52,7 +52,30 @@ def format_timestamp(dt: Optional[datetime] = None,
     """
     if dt is None:
         dt = datetime.now()
-    return dt.strftime(format_str)
+    
+    # 문자열이 입력된 경우 datetime 객체로 변환
+    if isinstance(dt, str):
+        try:
+            # ISO 8601 형식 문자열 처리 (2022-01-01T12:00:00Z, 2022-01-01T12:00:00+00:00 등)
+            if 'T' in dt and (dt.endswith('Z') or '+' in dt):
+                dt = dt.replace('Z', '+00:00')  # Z는 UTC를 의미
+                dt = datetime.fromisoformat(dt)
+            # 일반 날짜 형식 처리
+            elif '-' in dt:
+                dt = datetime.fromisoformat(dt)
+            # 변환 실패 시 원본 문자열 반환
+            else:
+                return dt
+        except (ValueError, TypeError):
+            # 변환할 수 없는 형식이면 원본 문자열 반환
+            return dt
+    
+    # datetime 객체를 문자열로 변환
+    try:
+        return dt.strftime(format_str)
+    except (AttributeError, TypeError):
+        # 변환 실패 시 원본 반환
+        return str(dt)
 
 def get_date_range(days: int) -> tuple:
     """

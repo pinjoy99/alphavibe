@@ -5,6 +5,10 @@ import matplotlib.pyplot as plt
 import matplotlib as mpl
 from typing import Dict, Any, Tuple, List
 
+# 색상 팔레트
+COLORS = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', 
+          '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf']
+
 # 기본 색상 팔레트
 DEFAULT_COLORS = {
     # 기본 차트 요소
@@ -138,6 +142,23 @@ STYLE_PRESETS = {
         },
     },
 }
+
+def set_chart_style(style='dark_background'):
+    """
+    차트 스타일 설정
+    
+    Parameters:
+        style (str): 'dark_background', 'default', 'ggplot' 등 matplotlib 스타일
+    """
+    plt.style.use(style)
+    # 폰트 크기 등 기본 설정
+    plt.rcParams['font.size'] = 12
+    plt.rcParams['axes.titlesize'] = 14
+    plt.rcParams['axes.labelsize'] = 12
+    plt.rcParams['xtick.labelsize'] = 10
+    plt.rcParams['ytick.labelsize'] = 10
+    # Unicode minus 문자 대신 일반 하이픈('-') 사용 설정
+    plt.rcParams['axes.unicode_minus'] = False
 
 def apply_style(style: str = 'default') -> Dict[str, Any]:
     """

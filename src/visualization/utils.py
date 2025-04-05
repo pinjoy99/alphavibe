@@ -157,3 +157,18 @@ def generate_filename(prefix: str, ticker: str, strategy: Optional[str] = None,
     
     # 모든 구성요소를 언더스코어(_)로 연결
     return f"{'_'.join(components)}.png"
+
+def set_chart_style(style='dark_background'):
+    """
+    차트 스타일 설정
+    
+    Parameters:
+        style (str): 'dark_background', 'default', 'ggplot' 등 matplotlib 스타일
+    """
+    plt.style.use(style)
+    # 폰트 크기 등 기본 설정
+    plt.rcParams['font.size'] = 12
+    plt.rcParams['axes.titlesize'] = 14
+    plt.rcParams['axes.labelsize'] = 12
+    plt.rcParams['xtick.labelsize'] = 10
+    plt.rcParams['ytick.labelsize'] = 10

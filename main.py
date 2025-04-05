@@ -37,6 +37,10 @@ from src.visualization import (
     setup_chart_dir
 )
 
+# 계좌 조회 기능 추가
+from src.trading.account import AccountManager
+from src.visualization.account_charts import plot_asset_distribution, plot_profit_loss
+
 # 명령줄 인자 파싱
 def parse_args():
     parser = argparse.ArgumentParser(description="암호화폐 가격 분석")
@@ -45,6 +49,7 @@ def parse_args():
     parser.add_argument("--strategy", "-s", choices=["sma", "bb", "macd", "rsi"], default="sma", help="백테스팅 전략 선택 (기본값: sma)")
     parser.add_argument("--period", "-p", type=str, default="3m", help="백테스팅 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)")
     parser.add_argument("--invest", "-i", type=float, default=1000000, help="백테스팅 초기 투자금액 (원화)")
+    parser.add_argument("--account", "-a", action="store_true", help="계좌 정보 조회")
     return parser.parse_args()
 
 # Load environment variables
@@ -233,6 +238,154 @@ async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool)
         if enable_telegram:
             await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
 
+async def check_account(bot: Optional[Bot], enable_telegram: bool) -> None:
+    """
+    계좌 정보 조회 및 분석
+    
+    Parameters:
+        bot (Optional[Bot]): 텔레그램 봇 인스턴스
+        enable_telegram (bool): 텔레그램 알림 활성화 여부
+    """
+    print("\n계좌 정보 조회를 시작합니다...")
+    
+    if enable_telegram:
+        await send_telegram_message("🔍 계좌 정보 조회를 시작합니다...", enable_telegram, bot)
+    
+    # 계좌 정보 조회
+    account_manager = AccountManager()
+    if not account_manager.refresh():
+        error_message = "❌ 계좌 정보 조회 실패: API 키를 확인하세요."
+        print(error_message)
+        if enable_telegram:
+            await send_telegram_message(error_message, enable_telegram, bot)
+        return
+    
+    # 계좌 요약 정보 (500원 이상 코인만 표시, 가치 기준 정렬)
+    summary = account_manager.get_summary(min_value=500.0, sort_by='value')
+    
+    # 콘솔에 출력
+    print("\n===== 계좌 정보 요약 =====")
+    print(f"조회 시간: {summary.get('last_update', '정보 없음')}")
+    print(f"보유 현금: {summary.get('total_krw', 0):,.0f} KRW")
+    print(f"총 자산 가치: {summary.get('total_asset_value', 0):,.0f} KRW")
+    
+    # 손익 정보 (총 손익이 있는 경우만 표시)
+    total_profit_loss = summary.get('total_profit_loss', 0)
+    if total_profit_loss != 0:
+        profit_sign = "+" if total_profit_loss > 0 else ""
+        print(f"총 손익: {profit_sign}{total_profit_loss:,.0f} KRW ({profit_sign}{summary.get('total_profit_loss_pct', 0):.2f}%)")
+    
+    # 코인별 보유 현황 출력
+    coins = summary.get('coins', [])
+    if coins:
+        print("\n----- 코인별 보유 현황 -----")
+        for coin in coins:
+            print(f"{coin['currency']} ({coin['ticker']}):")
+            print(f"  보유량: {coin['balance']:.8f}")
+            print(f"  매수 평균가: {coin['avg_buy_price']:,.0f} KRW")
+            print(f"  현재가: {coin['current_price']:,.0f} KRW")
+            print(f"  평가금액: {coin['current_value']:,.0f} KRW")
+            
+            # 손익 정보 (변화가 있는 경우만 표시)
+            if coin['profit_loss'] != 0:
+                profit_sign = "+" if coin['profit_loss'] > 0 else ""
+                print(f"  손익: {profit_sign}{coin['profit_loss']:,.0f} KRW ({profit_sign}{coin['profit_loss_pct']:.2f}%)")
+            print("----------------------------")
+    
+    # 소액 코인 정보 표시
+    others = summary.get('others', {})
+    if others.get('count', 0) > 0:
+        print(f"\n----- 소액 코인 ({others.get('count', 0)}개) -----")
+        print(f"총 평가금액: {others.get('total_value', 0):,.0f} KRW")
+        if others.get('total_profit_loss', 0) != 0:
+            profit_sign = "+" if others.get('total_profit_loss', 0) > 0 else ""
+            print(f"총 손익: {profit_sign}{others.get('total_profit_loss', 0):,.0f} KRW")
+        print("----------------------------")
+    else:
+        print("\n소액 코인이 없습니다.")
+    
+    # 최근 주문 내역
+    orders = account_manager.get_recent_orders(limit=5)
+    if orders and len(orders) > 0:
+        print("\n----- 최근 5개 주문 내역 -----")
+        for order in orders:
+            print(f"{order['created_at']} | {order['ticker']} | {order['side']} | " +
+                  f"가격: {order['price']:,.0f} KRW | 수량: {order['executed_volume']:.8f} | " +
+                  f"금액: {order['amount']:,.0f} KRW")
+    else:
+        print("\n최근 주문 내역이 없습니다.")
+    
+    # 계좌 히스토리 저장
+    try:
+        history_path = account_manager.save_account_history()
+        if history_path:
+            print(f"\n계좌 히스토리 저장 완료: {history_path}")
+    except Exception as e:
+        print(f"\n계좌 히스토리 저장 실패: {e}")
+    
+    # 시각화
+    try:
+        chart_dir = setup_chart_dir('results/account')
+        
+        # 자산이 있는 경우만 차트 생성
+        if summary['total_asset_value'] > 0:
+            # 자산 분포 차트
+            asset_chart_path = plot_asset_distribution(summary, chart_dir)
+            print(f"자산 분포 차트 저장 완료: {asset_chart_path}")
+            
+            # 손익이 있는 코인이 있는 경우만 손익 차트 생성
+            if any(coin['invested_value'] > 0 for coin in coins):
+                profit_chart_path = plot_profit_loss(summary, chart_dir)
+                print(f"손익 차트 저장 완료: {profit_chart_path}")
+            
+                # 텔레그램 전송
+                if enable_telegram:
+                    # 요약 메시지 생성
+                    message = f"💰 *계좌 정보 요약*\n\n"
+                    message += f"📊 총 자산 가치: `{summary.get('total_asset_value', 0):,.0f} KRW`\n"
+                    message += f"💵 보유 현금: `{summary.get('total_krw', 0):,.0f} KRW`\n"
+                    
+                    if total_profit_loss != 0:
+                        profit_sign = "+" if total_profit_loss > 0 else ""
+                        message += f"📈 총 손익: `{profit_sign}{total_profit_loss:,.0f} KRW ({profit_sign}{summary.get('total_profit_loss_pct', 0):.2f}%)`\n\n"
+                    
+                    # 코인 정보 추가 (보유량이 있는 코인만)
+                    active_coins = [c for c in coins if c['balance'] > 0]
+                    if active_coins:
+                        message += f"*코인별 보유 현황:*\n"
+                        for coin in active_coins[:10]:  # 너무 길어지지 않도록 상위 10개만
+                            profit_sign = "+" if coin['profit_loss_pct'] > 0 else ""
+                            message += f"• *{coin['currency']}*: {coin['balance']:.8f} ({profit_sign}{coin['profit_loss_pct']:.2f}%)\n"
+                        
+                        # 나머지 코인 수 표시
+                        if len(active_coins) > 10:
+                            message += f"• 그 외 {len(active_coins) - 10}개 코인...\n"
+                    
+                    # 소액 코인 정보 추가
+                    if others.get('count', 0) > 0:
+                        message += f"\n*소액 코인:* {others.get('count', 0)}개 (총 `{others.get('total_value', 0):,.0f} KRW`)\n"
+                    
+                    # 차트 전송
+                    await send_telegram_chart(asset_chart_path, message, enable_telegram, bot)
+                    
+                    # 손익 차트 전송
+                    if 'profit_chart_path' in locals():
+                        await send_telegram_chart(profit_chart_path, "💹 *코인별 손익 현황*", enable_telegram, bot)
+        else:
+            print("자산 분포/손익 차트 생성 건너뜀 (자산 없음)")
+            
+            if enable_telegram:
+                message = f"💰 *계좌 정보 요약*\n\n"
+                message += f"📊 총 자산 가치: `{summary.get('total_asset_value', 0):,.0f} KRW`\n"
+                message += f"💵 보유 현금: `{summary.get('total_krw', 0):,.0f} KRW`\n"
+                message += f"\n코인 보유 내역이 없습니다."
+                await send_telegram_message(message, enable_telegram, bot)
+    except Exception as e:
+        error_message = f"차트 생성 실패: {e}"
+        print(error_message)
+        if enable_telegram:
+            await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
+
 async def main_async(args):
     # 명령줄 인자 추출
     enable_telegram = args.telegram
@@ -240,6 +393,7 @@ async def main_async(args):
     strategy = args.strategy
     period = args.period
     initial_capital = args.invest
+    enable_account = args.account
     
     # 시각화 모듈 사용하여 차트 디렉토리 설정
     charts_dir = setup_chart_dir(CHART_SAVE_PATH)
@@ -255,8 +409,26 @@ async def main_async(args):
         "KRW-XRP",    # Ripple
     ]
     
+    # 텔레그램 봇 설정
+    bot = None
     if enable_telegram:
-        async with Bot(token=os.getenv('TELEGRAM_BOT_TOKEN')) as bot:
+        # 환경 변수에서 텔레그램 설정 읽기
+        TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
+        
+        # 텔레그램 봇 초기화
+        if TELEGRAM_BOT_TOKEN:
+            bot = Bot(token=TELEGRAM_BOT_TOKEN)
+            print("텔레그램 봇이 설정되었습니다.")
+        else:
+            print("텔레그램 봇 토큰이 설정되지 않았습니다.")
+    
+    # 계좌 정보 조회 모드
+    if enable_account:
+        await check_account(bot, enable_telegram)
+        return
+    
+    if enable_telegram:
+        async with bot:
             if enable_backtest:
                 await send_telegram_message("🚀 Starting cryptocurrency backtesting...", enable_telegram, bot)
                 

@@ -10,6 +10,7 @@ BACKTEST="false"
 STRATEGY="sma"
 PERIOD="3m"
 INVEST="1000000"
+ACCOUNT="false"
 
 # 매개변수 처리
 while [[ $# -gt 0 ]]; do
@@ -35,6 +36,10 @@ while [[ $# -gt 0 ]]; do
       INVEST="$2"
       shift 2
       ;;
+    --account|-a)
+      ACCOUNT="true"
+      shift
+      ;;
     --help|-h)
       echo "===== AlphaVibe - 암호화폐 백테스팅 및 분석 도구 ====="
       echo "사용법: ./run.sh [옵션]"
@@ -45,6 +50,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --strategy, -s STRATEGY    백테스팅 전략 선택 (sma, bb, macd, rsi 중 선택, 기본값: sma)"
       echo "  --period, -p PERIOD        백테스팅 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y, 기본값: 3m)"
       echo "  --invest, -i AMOUNT        백테스팅 초기 투자금액 (기본값: 1,000,000원)"
+      echo "  --account, -a              계좌 정보 조회 모드 활성화"
       echo "  --help, -h                 도움말 표시"
       echo ""
       echo "전략 정보:"
@@ -91,8 +97,12 @@ if [ ! -d "$SCRIPT_DIR/venv" ]; then
   echo "환경 설정이 완료되었습니다."
 fi
 
-# 가상환경 활성화
-source "$SCRIPT_DIR/venv/bin/activate"
+# 가상환경 활성화 (존재하는 경우에만)
+if [ -f "$SCRIPT_DIR/venv/bin/activate" ]; then
+  source "$SCRIPT_DIR/venv/bin/activate"
+else
+  echo "가상환경을 찾을 수 없습니다. 시스템 환경에서 실행합니다."
+fi
 
 # 명령줄 옵션 구성
 OPTIONS=""
@@ -103,6 +113,12 @@ if [ "$TELEGRAM" = "true" ]; then
   OPTIONS="$OPTIONS --telegram"
 fi
 
+# 계좌 정보 조회 상태 출력 및 옵션 추가
+if [ "$ACCOUNT" = "true" ]; then
+  echo "계좌 정보 조회 모드가 활성화되었습니다."
+  OPTIONS="$OPTIONS --account"
+fi
+
 # 백테스팅 상태 출력 및 옵션 추가
 if [ "$BACKTEST" = "true" ]; then
   echo "백테스팅 모드가 활성화되었습니다."
@@ -111,6 +127,8 @@ if [ "$BACKTEST" = "true" ]; then
   echo "  - 초기 투자금액: $INVEST"
   
   OPTIONS="$OPTIONS --backtest --strategy $STRATEGY --period $PERIOD --invest $INVEST"
+elif [ "$ACCOUNT" = "true" ]; then
+  echo "계좌 정보 조회 모드로 실행합니다."
 else
   echo "분석 모드로 실행합니다."
 fi
