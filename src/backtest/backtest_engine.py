@@ -32,17 +32,18 @@ def backtest_strategy(df: pd.DataFrame, initial_capital: float) -> Dict[str, Any
         print(f"경고: 데이터에 {nan_rows}개의 NaN 행이 있습니다. 이 행들은 백테스팅에서 무시됩니다.")
     
     # 기본 변수 초기화
-    position = 0  # 0: 매수 없음, 1: 매수
+    position_ratio = 0.0  # 포지션 비율 (0.0: 보유 없음, 1.0: 최대 매수)
     cash = initial_capital
     coin_amount = 0
     fee_rate = 0.0005  # 수수료 0.05%
-    max_invest_ratio = 0.5  # 최대 투자 비율 50% (리스크 관리)
+    max_position_per_trade = 0.5  # 한 번에 최대 50%까지 투자 가능
+    min_investment = initial_capital * 0.01  # 최소 투자 금액 (초기 자본의 1%)
     
     # 결과 저장용 리스트
     dates = []
     cash_history = []
     asset_history = []
-    position_history = []
+    position_ratio_history = []
     trade_history = []
     
     # 백테스팅 실행
@@ -61,7 +62,7 @@ def backtest_strategy(df: pd.DataFrame, initial_capital: float) -> Dict[str, Any
             dates.append(date)
             cash_history.append(cash)
             asset_history.append(asset_value)
-            position_history.append(position)
+            position_ratio_history.append(position_ratio)
             continue
             
         signal = df['signal'].iloc[i]
@@ -71,31 +72,57 @@ def backtest_strategy(df: pd.DataFrame, initial_capital: float) -> Dict[str, Any
         asset_value = cash + coin_value
         
         # 신호에 따른 거래 실행
-        if signal == 1 and position == 0:  # 매수 신호 & 미보유 상태
-            # 최대 투자 비율을 고려한 투자금액 계산
-            invest_amount = cash * max_invest_ratio
-            # 수수료를 고려한 실제 코인 구매량
-            coin_to_buy = (invest_amount * (1 - fee_rate)) / price
-            # 현금 감소
-            cash -= invest_amount
-            # 코인 수량 증가
-            coin_amount += coin_to_buy
-            # 포지션 변경
-            position = 1
-            # 거래 기록
-            trade_history.append({"date": date, "type": "buy", "price": price})
+        if signal == 1 and position_ratio < 1.0:  # 매수 신호 & 추가 매수 가능
+            # 매수 가능한 비율 계산
+            available_ratio = min(max_position_per_trade, 1.0 - position_ratio)
+            # 투자 금액 계산
+            invest_amount = cash * available_ratio
+            
+            # 최소 투자 금액 체크
+            if invest_amount >= min_investment and cash > 0:
+                # 수수료를 고려한 실제 코인 구매량
+                coin_to_buy = (invest_amount * (1 - fee_rate)) / price
+                # 현금 감소
+                cash -= invest_amount
+                # 코인 수량 증가
+                coin_amount += coin_to_buy
+                # 포지션 비율 업데이트
+                old_position_ratio = position_ratio
+                position_ratio += available_ratio
+                
+                # 거래 기록
+                trade_history.append({
+                    "date": date, 
+                    "type": "buy", 
+                    "price": price, 
+                    "amount": coin_to_buy,
+                    "position_change": position_ratio - old_position_ratio
+                })
         
-        elif signal == -1 and position == 1:  # 매도 신호 & 보유 상태
+        elif signal == -1 and position_ratio > 0.0:  # 매도 신호 & 보유 중인 코인 있음
+            # 매도 비율 계산
+            sell_ratio = min(max_position_per_trade, position_ratio)
+            # 매도할 코인 수량
+            coin_to_sell = coin_amount * (sell_ratio / position_ratio)
+            
             # 코인 매도로 얻는 현금 (수수료 차감)
-            cash_gained = coin_amount * price * (1 - fee_rate)
+            cash_gained = coin_to_sell * price * (1 - fee_rate)
             # 현금 증가
             cash += cash_gained
-            # 코인 수량 초기화
-            coin_amount = 0
-            # 포지션 변경
-            position = 0
+            # 코인 수량 감소
+            coin_amount -= coin_to_sell
+            # 포지션 비율 업데이트
+            old_position_ratio = position_ratio
+            position_ratio -= sell_ratio
+            
             # 거래 기록
-            trade_history.append({"date": date, "type": "sell", "price": price})
+            trade_history.append({
+                "date": date, 
+                "type": "sell", 
+                "price": price, 
+                "amount": coin_to_sell,
+                "position_change": old_position_ratio - position_ratio
+            })
         
         # 자산 가치 다시 계산 (거래 후)
         coin_value = coin_amount * price
@@ -105,20 +132,28 @@ def backtest_strategy(df: pd.DataFrame, initial_capital: float) -> Dict[str, Any
         if asset_value < initial_capital * 0.01:  # 초기 자본금의 1% 이하로 떨어지면
             asset_value = initial_capital * 0.01  # 안전장치
         
+        # 부동소수점 오차 처리 - 매우 작은 값이면 0으로 설정
+        if position_ratio < 0.001:
+            position_ratio = 0.0
+            coin_amount = 0.0
+        
         # 결과 저장
         dates.append(date)
         cash_history.append(cash)
         asset_history.append(asset_value)
-        position_history.append(position)
+        position_ratio_history.append(position_ratio)
     
     # 결과 데이터프레임 생성
     results_df = pd.DataFrame({
         'date': dates,
         'cash': cash_history,
         'asset': asset_history,
-        'position': position_history
+        'position_ratio': position_ratio_history
     })
     results_df.set_index('date', inplace=True)
+    
+    # 이진 포지션 값도 추가 (이전 버전과의 호환성)
+    results_df['position'] = results_df['position_ratio'].apply(lambda x: 1 if x > 0 else 0)
     
     # 드로우다운 계산
     results_df['peak'] = results_df['asset'].cummax()

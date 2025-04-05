@@ -224,7 +224,7 @@ def plot_asset_value(
     # 로그 스케일 사용 여부 결정 (자산 변화가 크면 로그 스케일 사용)
     use_log_scale = results_df['asset'].max() / results_df['asset'].min() > 5
     
-    # 자산 가치 그래프 그리기
+    # 기본 자산 가치 축 (왼쪽)
     if use_log_scale:
         ax.semilogy(results_df.index, results_df['asset'], color=colors['asset'], 
                    linewidth=linewidths['asset'], label='자산 가치')
@@ -238,9 +238,30 @@ def plot_asset_value(
     ax.axhline(y=initial_capital, color=colors['baseline'], linestyle='--', 
               alpha=alphas['baseline'], label='초기 자본금')
     
-    # 차트 설정 - 제목은 메인 함수에서 설정하므로 여기서는 제거
+    # 포지션 비율 표시 (오른쪽 축)
+    if 'position_ratio' in results_df.columns:
+        ax2 = ax.twinx()
+        color_position = 'darkgreen'  # 포지션 비율 색상
+        ax2.fill_between(results_df.index, 0, results_df['position_ratio'] * 100, 
+                        color=color_position, alpha=0.2, label='포지션 비율')
+        ax2.set_ylim(0, 100)
+        ax2.set_ylabel('포지션 비율 (%)', color=color_position, 
+                      fontsize=style_config['fontsize']['label'])
+        ax2.tick_params(axis='y', colors=color_position)
+        ax2.spines['right'].set_color(color_position)
+        
+        # 포지션 비율 범례 추가
+        lines, labels = ax.get_legend_handles_labels()
+        lines2, labels2 = ax2.get_legend_handles_labels()
+        ax.legend(lines + lines2, labels + labels2, loc='upper left', 
+                 fontsize=style_config['fontsize']['legend'])
+    else:
+        # 차트 설정 - 제목은 메인 함수에서 설정하므로 여기서는 제거
+        ax.grid(True, alpha=style_config['alpha']['grid'])
+        ax.legend(loc='upper left', fontsize=style_config['fontsize']['legend'])
+    
+    # 공통 설정
     ax.grid(True, alpha=style_config['alpha']['grid'])
-    ax.legend(loc='upper left', fontsize=style_config['fontsize']['legend'])
 
 def plot_drawdown(
     ax: plt.Axes,

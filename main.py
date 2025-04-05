@@ -157,6 +157,23 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
             print(f"최대 낙폭: {results['max_drawdown_pct']:.2f}%")
             print(f"거래 횟수: {results['trade_count']}")
             
+            # 거래 내역 세부 정보 출력 (선택적)
+            print_detailed_trades = True  # 상세 거래 내역 출력 여부
+            if print_detailed_trades and results['trade_history']:
+                print("\n주요 거래 내역:")
+                for i, trade in enumerate(results['trade_history']):
+                    if i >= 5:  # 최대 5개만 출력
+                        print(f"... 총 {len(results['trade_history'])}개 거래 중 일부만 표시")
+                        break
+                    
+                    trade_type = "매수" if trade['type'] == 'buy' else "매도"
+                    position_change = trade.get('position_change', 0)
+                    position_str = f"포지션 변화: {position_change*100:.1f}%" if position_change else ""
+                    
+                    print(f"{trade['date'].strftime('%Y-%m-%d')} | {trade_type} | " +
+                          f"가격: {trade['price']:,.0f} KRW | " +
+                          f"수량: {trade.get('amount', 0):.8f} | {position_str}")
+            
             # 그래프 생성 전 unicode minus 설정 다시 적용
             matplotlib.rcParams['axes.unicode_minus'] = False
             
