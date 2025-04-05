@@ -82,7 +82,6 @@ chmod +x watch_and_test.sh
    UPBIT_SECRET_KEY=your_secret_key_here
 
    # 텔레그램 설정 (선택사항)
-   ENABLE_TELEGRAM=false  # 텔레그램 알림을 사용하려면 true로 변경
    TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
    TELEGRAM_CHAT_ID=your_telegram_chat_id_here
    ```
@@ -91,8 +90,8 @@ chmod +x watch_and_test.sh
 
    | 환경 변수 | 설명 | 기본값 |
    |-----------|------|--------|
-   | CHART_SAVE_PATH | 차트 이미지 저장 경로 | charts |
-   | BACKTEST_RESULT_PATH | 백테스트 결과 저장 경로 | backtest_results |
+   | CHART_SAVE_PATH | 차트 이미지 저장 경로 | results/analysis |
+   | BACKTEST_RESULT_PATH | 백테스트 결과 저장 경로 | results/strategy_results |
    | DEFAULT_INTERVAL | 기본 시간 간격 (day, minute1, minute3, minute5 등) | day |
    | DEFAULT_COUNT | 조회할 데이터 개수 | 100 |
    | LOG_LEVEL | 로그 레벨 (INFO, DEBUG, WARNING, ERROR) | INFO |
@@ -132,8 +131,8 @@ chmod +x watch_and_test.sh
 
 5. 결과 확인:
    - 콘솔에 각 종목의 기본 통계 정보가 출력됩니다.
-   - `charts` 폴더에 분석 차트 이미지가 저장됩니다.
-   - `backtest_results` 폴더에 백테스팅 결과 차트 이미지가 저장됩니다.
+   - `results/analysis` 폴더에 분석 차트 이미지가 저장됩니다.
+   - `results/strategy_results` 폴더에 백테스팅 결과 차트 이미지가 저장됩니다.
    - 텔레그램 알림을 활성화한 경우, 봇을 통해 알림과 차트가 전송됩니다.
 
 ## 프로젝트 구조
@@ -147,8 +146,9 @@ chmod +x watch_and_test.sh
 ├── run.sh                    # 실행 스크립트
 ├── setup.sh                  # 환경 설정 스크립트
 ├── watch_and_test.sh         # 자동 백테스팅 스크립트
-├── charts/                   # 차트 이미지 저장 폴더
-├── backtest_results/         # 백테스트 결과 저장 폴더
+├── results/                  # 결과 데이터 저장 폴더
+│   ├── analysis/             # 분석 차트 저장 폴더
+│   └── strategy_results/     # 백테스트 결과 저장 폴더
 ├── src/                      # 소스 코드
 │   ├── api/                  # API 관련 코드
 │   ├── backtest/             # 백테스팅 엔진

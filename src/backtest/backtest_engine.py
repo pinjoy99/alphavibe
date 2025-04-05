@@ -6,6 +6,7 @@ import os
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 import matplotlib.dates as mdates
+from dotenv import load_dotenv
 
 from src.strategies import BaseStrategy, create_strategy
 from src.visualization import plot_backtest_results as viz_plot_backtest_results
@@ -149,8 +150,14 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
     Returns:
         str: 저장된 차트 경로
     """
+    # 환경 변수 로드
+    load_dotenv()
+    
+    # 백테스트 결과 저장 경로
+    backtest_result_path = os.getenv('BACKTEST_RESULT_PATH', 'results/strategy_results')
+    
     # 시각화 모듈의 함수 사용
-    return viz_plot_backtest_results(ticker, results, chart_dir="backtest_results")
+    return viz_plot_backtest_results(ticker, results, chart_dir=backtest_result_path)
 
 def process_backtest_results(df: pd.DataFrame, results_df: pd.DataFrame, strategy: str, initial_capital: float, 
                       period: str, strategy_params: Dict = None) -> Dict[str, Any]:

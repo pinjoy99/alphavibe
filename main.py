@@ -46,7 +46,7 @@ def parse_args():
 load_dotenv()
 
 # Get settings from environment variables
-CHART_SAVE_PATH = os.getenv('CHART_SAVE_PATH', 'charts')
+CHART_SAVE_PATH = os.getenv('CHART_SAVE_PATH', 'results/analysis')
 DEFAULT_INTERVAL = os.getenv('DEFAULT_INTERVAL', 'day')
 DEFAULT_COUNT = int(os.getenv('DEFAULT_COUNT', '100'))
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
@@ -57,7 +57,7 @@ UPBIT_SECRET_KEY = os.getenv('UPBIT_SECRET_KEY')
 
 # 백테스팅 설정
 BACKTEST_DATA_PATH = os.getenv('BACKTEST_DATA_PATH', 'backtest_data')
-BACKTEST_RESULT_PATH = os.getenv('BACKTEST_RESULT_PATH', 'backtest_results')
+BACKTEST_RESULT_PATH = os.getenv('BACKTEST_RESULT_PATH', 'results/strategy_results')
 
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
