@@ -19,6 +19,12 @@ from src.backtest import (
     plot_backtest_results
 )
 from src.strategies import create_strategy
+from src.notification import (
+    send_telegram_message,
+    send_telegram_chart,
+    get_telegram_backtest_message,
+    get_telegram_analysis_message
+)
 
 # 명령줄 인자 파싱
 def parse_args():
@@ -43,10 +49,6 @@ LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 UPBIT_ACCESS_KEY = os.getenv('UPBIT_ACCESS_KEY')
 UPBIT_SECRET_KEY = os.getenv('UPBIT_SECRET_KEY')
 
-# Telegram settings
-TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
-
 # 백테스팅 설정
 BACKTEST_DATA_PATH = os.getenv('BACKTEST_DATA_PATH', 'backtest_data')
 BACKTEST_RESULT_PATH = os.getenv('BACKTEST_RESULT_PATH', 'backtest_results')
@@ -54,42 +56,16 @@ BACKTEST_RESULT_PATH = os.getenv('BACKTEST_RESULT_PATH', 'backtest_results')
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-async def send_telegram_message(bot: Bot, message: str, enable_telegram: bool) -> None:
-    """Send message to Telegram"""
-    if not enable_telegram:
-        return
-    
-    try:
-        await bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=message, parse_mode='HTML')
-    except Exception as e:
-        print(f"Failed to send telegram message: {e}")
-
-async def send_telegram_chart(bot: Bot, chart_path: str, caption: str, enable_telegram: bool) -> None:
-    """Send chart image to Telegram"""
-    if not enable_telegram:
-        return
-    
-    try:
-        with open(chart_path, 'rb') as chart:
-            await bot.send_photo(
-                chat_id=TELEGRAM_CHAT_ID,
-                photo=chart,
-                caption=caption,
-                parse_mode='HTML'
-            )
-    except Exception as e:
-        print(f"Failed to send telegram chart: {e}")
-
 # ----------------------
 # 백테스팅 실행 함수
 # ----------------------
 
-async def run_backtest(bot: Bot, ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool) -> None:
+async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool) -> None:
     """
     백테스팅 실행
     
     Parameters:
-        bot (Bot): 텔레그램 봇 인스턴스
+        bot (Optional[Bot]): 텔레그램 봇 인스턴스
         ticker (str): 종목 심볼
         strategy (str): 전략 이름
         period (str): 백테스팅 기간
@@ -99,7 +75,7 @@ async def run_backtest(bot: Bot, ticker: str, strategy: str, period: str, initia
     print(f"\n백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period})")
     
     if enable_telegram:
-        await send_telegram_message(bot, f"🔍 백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period})", enable_telegram)
+        await send_telegram_message(f"🔍 백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period})", enable_telegram, bot)
     
     # 백테스팅 데이터 조회
     interval = "minute60"  # 1시간 간격 데이터 사용
@@ -176,30 +152,21 @@ async def run_backtest(bot: Bot, ticker: str, strategy: str, period: str, initia
                 elif strategy == "rsi":
                     params_str = f"(기간: {strategy_params['window']}, 과매수: {strategy_params['overbought']}, 과매도: {strategy_params['oversold']})"
                 
-                result_message = f"""
-📊 <b>{ticker} 백테스팅 결과</b>
-
-🔹 <b>전략:</b> {strategy_obj.name} {params_str}
-📅 <b>기간:</b> {results['start_date']} ~ {results['end_date']} ({results['total_days']}일)
-💰 <b>초기 자본금:</b> {results['initial_capital']:,.0f} KRW
-💰 <b>최종 자본금:</b> {results['final_capital']:,.0f} KRW
-📈 <b>총 수익률:</b> {results['total_return_pct']:.2f}%
-📈 <b>연간 수익률:</b> {results['annual_return_pct']:.2f}%
-📉 <b>최대 낙폭:</b> {results['max_drawdown_pct']:.2f}%
-🔄 <b>거래 횟수:</b> {results['trade_count']}
-"""
+                # 메시지 생성과 전송을 분리된 모듈 함수 사용
+                result_message = get_telegram_backtest_message(ticker, strategy_obj.name, params_str, results)
+                
                 # 차트 전송
-                await send_telegram_chart(bot, chart_path, result_message, enable_telegram)
+                await send_telegram_chart(chart_path, result_message, enable_telegram, bot)
         else:
             error_message = f"유효하지 않은 전략: {strategy}"
             print(error_message)
             if enable_telegram:
-                await send_telegram_message(bot, f"❌ {error_message}", enable_telegram)
+                await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
     else:
         error_message = f"백테스팅 데이터 조회 실패: {ticker}"
         print(error_message)
         if enable_telegram:
-            await send_telegram_message(bot, f"❌ {error_message}", enable_telegram)
+            await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
 
 def plot_price_chart(df, ticker):
     """
@@ -233,23 +200,12 @@ def plot_price_chart(df, ticker):
     
     return save_path
 
-def format_stats_message(ticker: str, stats: Dict[str, Any]) -> str:
-    """Format statistics message for Telegram"""
-    return f"""
-📊 <b>{ticker} Analysis Results</b>
-
-📅 Period: {stats['start_date']} ~ {stats['end_date']}
-💰 Highest: {stats['highest_price']:,} KRW
-💰 Lowest: {stats['lowest_price']:,} KRW
-📈 Volume: {stats['volume']:,}
-"""
-
-async def analyze_ticker(bot: Bot, ticker: str, enable_telegram: bool) -> None:
+async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool) -> None:
     """Analyze single ticker and send results to Telegram"""
     print(f"\nAnalyzing {ticker}...")
     
     if enable_telegram:
-        await send_telegram_message(bot, f"🔍 Starting analysis for {ticker}...", enable_telegram)
+        await send_telegram_message(f"🔍 Starting analysis for {ticker}...", enable_telegram, bot)
     
     # Get historical data
     df = get_historical_data(ticker)
@@ -278,13 +234,14 @@ async def analyze_ticker(bot: Bot, ticker: str, enable_telegram: bool) -> None:
         
         # Send to Telegram if enabled
         if enable_telegram:
-            stats_message = format_stats_message(ticker, stats)
-            await send_telegram_chart(bot, chart_path, stats_message, enable_telegram)
+            # 메시지 생성과 전송을 분리된 모듈 함수 사용
+            stats_message = get_telegram_analysis_message(ticker, stats)
+            await send_telegram_chart(chart_path, stats_message, enable_telegram, bot)
     else:
         error_message = f"Failed to fetch data for {ticker}"
         print(error_message)
         if enable_telegram:
-            await send_telegram_message(bot, f"❌ {error_message}", enable_telegram)
+            await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
 
 async def main_async(args):
     # 명령줄 인자 추출
@@ -311,23 +268,23 @@ async def main_async(args):
     ]
     
     if enable_telegram:
-        async with Bot(token=TELEGRAM_BOT_TOKEN) as bot:
+        async with Bot(token=os.getenv('TELEGRAM_BOT_TOKEN')) as bot:
             if enable_backtest:
-                await send_telegram_message(bot, "🚀 Starting cryptocurrency backtesting...", enable_telegram)
+                await send_telegram_message("🚀 Starting cryptocurrency backtesting...", enable_telegram, bot)
                 
                 # 백테스팅 실행
                 for ticker in tickers:
                     await run_backtest(bot, ticker, strategy, period, initial_capital, enable_telegram)
                 
-                await send_telegram_message(bot, "✅ Backtesting completed!", enable_telegram)
+                await send_telegram_message("✅ Backtesting completed!", enable_telegram, bot)
             else:
-                await send_telegram_message(bot, "🚀 Starting cryptocurrency analysis...", enable_telegram)
+                await send_telegram_message("🚀 Starting cryptocurrency analysis...", enable_telegram, bot)
                 
                 # Analyze each ticker
                 for ticker in tickers:
                     await analyze_ticker(bot, ticker, enable_telegram)
                 
-                await send_telegram_message(bot, "✅ Analysis completed!", enable_telegram)
+                await send_telegram_message("✅ Analysis completed!", enable_telegram, bot)
     else:
         # 백테스팅 모드일 경우
         if enable_backtest:
