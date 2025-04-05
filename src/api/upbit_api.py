@@ -1,16 +1,13 @@
 import pyupbit
 import pandas as pd
-from datetime import datetime, timedelta
 from typing import Optional
-import os
-
-# API key settings
-UPBIT_ACCESS_KEY = os.getenv('UPBIT_ACCESS_KEY')
-UPBIT_SECRET_KEY = os.getenv('UPBIT_SECRET_KEY')
-
-# Default settings
-DEFAULT_INTERVAL = os.getenv('DEFAULT_INTERVAL', 'day')
-DEFAULT_COUNT = int(os.getenv('DEFAULT_COUNT', '100'))
+from datetime import datetime
+from src.utils import (
+    UPBIT_ACCESS_KEY, UPBIT_SECRET_KEY, 
+    DEFAULT_INTERVAL, DEFAULT_COUNT,
+    parse_period_to_datetime
+)
+import re
 
 def get_historical_data(ticker, interval=None, count=None):
     """
@@ -33,37 +30,6 @@ def get_historical_data(ticker, interval=None, count=None):
     
     return df
 
-def parse_period_to_datetime(period_str: str) -> datetime:
-    """
-    기간 문자열을 datetime 객체로 변환
-    
-    Parameters:
-        period_str (str): 기간 문자열 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)
-        
-    Returns:
-        datetime: 현재 시간에서 기간을 뺀 datetime 객체
-    """
-    now = datetime.now()
-    
-    # 숫자와 단위 분리
-    import re
-    match = re.match(r'(\d+)([dwmy])', period_str)
-    if not match:
-        raise ValueError(f"Invalid period format: {period_str}. Use format like 1d, 3d, 1w, 1m, 3m, 6m, 1y")
-    
-    value, unit = int(match.group(1)), match.group(2)
-    
-    if unit == 'd':
-        return now - timedelta(days=value)
-    elif unit == 'w':
-        return now - timedelta(weeks=value)
-    elif unit == 'm':
-        return now - timedelta(days=value * 30)
-    elif unit == 'y':
-        return now - timedelta(days=value * 365)
-    else:
-        raise ValueError(f"Invalid period unit: {unit}")
-
 def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") -> pd.DataFrame:
     """
     백테스팅용 데이터 조회
@@ -71,15 +37,53 @@ def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") 
     Parameters:
         ticker (str): 종목 심볼 (예: "KRW-BTC")
         period_str (str): 기간 문자열 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)
-        interval (str): 시간 간격
+        interval (str): 시간 간격 (기본값: minute60, 기간에 따라 자동 조정 가능)
         
     Returns:
         pd.DataFrame: OHLCV 데이터
     """
     # 기간 파싱
     from_date = parse_period_to_datetime(period_str)
+    to_date = datetime.now()
+    
+    # 기간에 따라 적절한 간격 자동 선택
+    match = re.match(r'(\d+)([dwmy])', period_str)
+    if match:
+        value, unit = int(match.group(1)), match.group(2)
+        
+        # 6개월 이상인 경우 일봉 데이터 사용
+        if (unit == 'y') or (unit == 'm' and value >= 6):
+            interval = "day"
+        # 3~6개월인 경우 4시간 데이터 사용
+        elif (unit == 'm' and value >= 3) or (unit == 'w' and value >= 12):
+            interval = "minute240"
+        # 1~3개월인 경우 1시간 데이터 사용
+        elif (unit == 'm' and value >= 1) or (unit == 'w' and value >= 4):
+            interval = "minute60"
+        # 그 이하는 기본값 사용 (minute60)
+    
+    print(f"데이터 조회 기간: {from_date.strftime('%Y-%m-%d')} ~ {to_date.strftime('%Y-%m-%d')} (간격: {interval})")
     
     # 데이터 조회
-    df = pyupbit.get_ohlcv_from(ticker, interval=interval, fromDatetime=from_date)
+    try:
+        # pyupbit.get_ohlcv_from은 toDatetime 매개변수를 지원하지 않음
+        # 데이터를 먼저 가져온 후 날짜 범위로 필터링
+        df = pyupbit.get_ohlcv_from(ticker, interval=interval, fromDatetime=from_date)
+        
+        # 가져온 데이터를 to_date 이하로 필터링
+        if df is not None and not df.empty:
+            df = df[df.index <= to_date]
+            
+            # 실제 조회된 데이터 기간 출력
+            actual_from = df.index[0].strftime('%Y-%m-%d')
+            actual_to = df.index[-1].strftime('%Y-%m-%d')
+            print(f"실제 조회된 데이터 기간: {actual_from} ~ {actual_to} (총 {len(df)}개 데이터)")
+        else:
+            print("데이터 없음")
+            df = pd.DataFrame()
+            
+    except Exception as e:
+        print(f"데이터 조회 오류: {e}")
+        df = pd.DataFrame()
     
     return df 

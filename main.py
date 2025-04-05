@@ -120,8 +120,10 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
             # RSI 파라미터
             strategy_params = {
                 "window": 14,
-                "overbought": 70,
-                "oversold": 30
+                "overbought": 65,
+                "oversold": 35,
+                "exit_overbought": 55,
+                "exit_oversold": 45
             }
         
         # 전략 객체 생성 및 적용
@@ -136,6 +138,7 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
             # 결과에 전략 정보 추가
             results['strategy'] = strategy_obj.name
             results['strategy_params'] = strategy_obj.params
+            results['period'] = period  # 기간 정보 추가
             
             # 결과 출력
             print("\n백테스팅 결과:")
@@ -153,7 +156,6 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
             
             # 백테스팅 결과 시각화
             chart_path = plot_backtest_results(ticker, results)
-            print(f"차트 저장: {chart_path}")
             
             # 텔레그램 알림
             if enable_telegram:
@@ -166,7 +168,7 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                 elif strategy == "macd":
                     params_str = f"(단기: {strategy_params['short_window']}, 장기: {strategy_params['long_window']}, 시그널: {strategy_params['signal_window']})"
                 elif strategy == "rsi":
-                    params_str = f"(기간: {strategy_params['window']}, 과매수: {strategy_params['overbought']}, 과매도: {strategy_params['oversold']})"
+                    params_str = f"(기간: {strategy_params['window']}, 과매수: {strategy_params['overbought']}, 과매도: {strategy_params['oversold']}, 매도종료: {strategy_params['exit_overbought']}, 매수종료: {strategy_params['exit_oversold']})"
                 
                 # 메시지 생성과 전송을 분리된 모듈 함수 사용
                 result_message = get_telegram_backtest_message(ticker, strategy_obj.name, params_str, results)
@@ -219,7 +221,6 @@ async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool)
         matplotlib.rcParams['axes.unicode_minus'] = False
         
         chart_path = plot_price_chart(df, ticker, chart_dir=chart_dir)
-        print(f"Chart saved: {chart_path}")
         
         # Send to Telegram if enabled
         if enable_telegram:
