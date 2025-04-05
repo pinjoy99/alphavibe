@@ -40,6 +40,9 @@ def plot_price_chart(
     Returns:
         str: 저장된 차트 파일 경로
     """
+    # Unicode minus 문자 대신 일반 하이픈('-') 사용 설정
+    plt.rcParams['axes.unicode_minus'] = False
+    
     # 스타일 적용
     style_config = apply_style(style)
     colors = style_config['colors']
@@ -147,7 +150,7 @@ def plot_strategy_indicators(
     df: pd.DataFrame,
     strategy: str,
     style_config: Dict[str, Any]
-) -> None:
+) -> Optional[plt.Axes]:
     """
     전략별 지표를 차트에 표시
     
@@ -156,6 +159,9 @@ def plot_strategy_indicators(
         df (pd.DataFrame): 지표가 포함된 데이터프레임
         strategy (str): 전략 이름
         style_config (Dict[str, Any]): 스타일 설정
+        
+    Returns:
+        Optional[plt.Axes]: MACD 전략의 경우 히스토그램 축 객체 반환
     """
     colors = style_config['colors']
     linewidths = style_config['linewidth']
@@ -166,6 +172,7 @@ def plot_strategy_indicators(
                 linewidth=linewidths['ma'], label='단기 이동평균선')
         ax.plot(df.index, df['long_ma'], color=colors['ma_long'], 
                 linewidth=linewidths['ma'], label='장기 이동평균선')
+        return None
     
     # 볼린저 밴드 전략 지표
     elif strategy == 'BB' and 'upper_band' in df.columns and 'lower_band' in df.columns:
@@ -176,26 +183,26 @@ def plot_strategy_indicators(
                     linewidth=linewidths['ma'], label='중앙선')
         ax.plot(df.index, df['lower_band'], color=colors['bb_lower'], 
                 linewidth=linewidths['bb'], linestyle='--', label='하단 밴드')
+        return None
     
-    # MACD 전략 지표 (시그널 라인)
+    # MACD 전략 지표
     elif strategy == 'MACD' and 'macd' in df.columns and 'signal_line' in df.columns:
-        # MACD 지표는 별도의 축에 표시하는 것이 좋을 수 있지만, 
-        # 여기서는 단순화를 위해 동일 축에 표시
-        if 'histogram' in df.columns:
-            for i in range(len(df)-1):
-                color = colors['histogram_positive'] if df['histogram'].iloc[i] >= 0 else colors['histogram_negative']
-                ax.bar(df.index[i], df['histogram'].iloc[i], color=color, alpha=0.3, width=1)
-        
+        # MACD와 시그널 라인만 메인 차트에 표시
         ax.plot(df.index, df['macd'], color=colors['macd'], 
                 linewidth=linewidths['ma'], label='MACD')
         ax.plot(df.index, df['signal_line'], color=colors['signal'], 
                 linewidth=linewidths['ma'], label='시그널')
+        
+        # 기본 오버레이 지표 반환 (히스토그램은 별도 축에 표시됨)
+        return None
     
     # RSI 전략 지표
     elif strategy == 'RSI' and 'rsi' in df.columns:
         # RSI는 일반적으로 0-100 범위의 별도 차트에 표시하는 것이 좋지만,
         # 여기서는 단순화를 위해 표시하지 않음
-        pass
+        return None
+    
+    return None
 
 def plot_asset_value(
     ax: plt.Axes,
@@ -332,6 +339,9 @@ def plot_backtest_results(
     Returns:
         str: 저장된 차트 파일 경로
     """
+    # Unicode minus 문자 대신 일반 하이픈('-') 사용 설정
+    plt.rcParams['axes.unicode_minus'] = False
+    
     # 스타일 적용
     style_config = apply_style(style)
     
@@ -347,20 +357,68 @@ def plot_backtest_results(
     
     # 그래프 설정
     fig = plt.figure(figsize=style_config['figsize'])
-    gs = gridspec.GridSpec(4, 1, height_ratios=[3, 1.5, 1.5, 1], hspace=0.15)
     
-    # 1. 가격 차트 + 전략
-    ax1 = plt.subplot(gs[0])
+    # MACD 전략의 경우 추가 패널 포함
+    is_macd_strategy = strategy == 'MACD'
     
-    # 가격 데이터 (로그 스케일 사용)
-    ax1.semilogy(df.index, df['close'], color=style_config['colors']['price'], 
-                linewidth=style_config['linewidth']['price'], label='가격')
-    
-    # 전략 지표 그리기 (이동평균선, 볼린저 밴드 등)
-    plot_strategy_indicators(ax1, df, strategy, style_config)
-    
-    # 매수/매도 신호 표시
-    plot_trade_signals(ax1, df, buy_points, sell_points, style_config)
+    if is_macd_strategy:
+        # MACD 히스토그램 포함 - 높이 비율 조절
+        gs = gridspec.GridSpec(5, 1, height_ratios=[3, 0.8, 1.5, 1.5, 1], hspace=0.2)
+        
+        # 1. 가격 차트 + 전략
+        ax1 = plt.subplot(gs[0])
+        
+        # 가격 데이터 (로그 스케일 사용)
+        ax1.semilogy(df.index, df['close'], color=style_config['colors']['price'], 
+                    linewidth=style_config['linewidth']['price'], label='가격')
+        
+        # 전략 지표 그리기 (MACD, 시그널 라인)
+        plot_strategy_indicators(ax1, df, strategy, style_config)
+        
+        # 매수/매도 신호 표시
+        plot_trade_signals(ax1, df, buy_points, sell_points, style_config)
+        
+        # 2. MACD 히스토그램 차트 (별도 패널)
+        ax_macd = plt.subplot(gs[1], sharex=ax1)
+        
+        # MACD 히스토그램 그리기
+        for i in range(len(df)-1):
+            color = style_config['colors']['histogram_positive'] if df['histogram'].iloc[i] >= 0 else style_config['colors']['histogram_negative']
+            ax_macd.bar(df.index[i], df['histogram'].iloc[i], color=color, alpha=0.6, width=1)
+        
+        # MACD와 시그널 라인 그리기
+        ax_macd.plot(df.index, df['macd'], color=style_config['colors']['macd'], 
+                    linewidth=style_config['linewidth']['ma'], label='MACD')
+        ax_macd.plot(df.index, df['signal_line'], color=style_config['colors']['signal'], 
+                    linewidth=style_config['linewidth']['ma'], label='시그널')
+        
+        # 차트 설정
+        ax_macd.set_title("MACD 지표", fontsize=style_config['fontsize']['subtitle'])
+        ax_macd.grid(True, alpha=style_config['alpha']['grid'])
+        ax_macd.legend(loc='upper right', fontsize=style_config['fontsize']['legend'])
+        ax_macd.set_ylabel('MACD', fontsize=style_config['fontsize']['label'])
+        
+        # 자산 변화 그래프 (인덱스 2)
+        ax2 = plt.subplot(gs[2], sharex=ax1)
+    else:
+        # 기본 레이아웃
+        gs = gridspec.GridSpec(4, 1, height_ratios=[3, 1.5, 1.5, 1], hspace=0.15)
+        
+        # 1. 가격 차트 + 전략
+        ax1 = plt.subplot(gs[0])
+        
+        # 가격 데이터 (로그 스케일 사용)
+        ax1.semilogy(df.index, df['close'], color=style_config['colors']['price'], 
+                    linewidth=style_config['linewidth']['price'], label='가격')
+        
+        # 전략 지표 그리기 (이동평균선, 볼린저 밴드 등)
+        plot_strategy_indicators(ax1, df, strategy, style_config)
+        
+        # 매수/매도 신호 표시
+        plot_trade_signals(ax1, df, buy_points, sell_points, style_config)
+        
+        # 자산 변화 그래프 (인덱스 1)
+        ax2 = plt.subplot(gs[1], sharex=ax1)
     
     # 볼륨 표시 (볼륨 데이터가 있는 경우)
     if 'volume' in df.columns:
@@ -384,16 +442,15 @@ def plot_backtest_results(
     # X축 날짜 포맷 설정
     format_date_axis(ax1)
     
-    # 2. 자산 변화 그래프
-    ax2 = plt.subplot(gs[1], sharex=ax1)
+    # 자산 변화 그래프 그리기
     plot_asset_value(ax2, results_df, results['initial_capital'], style_config)
     
-    # 3. 드로우다운 차트
-    ax3 = plt.subplot(gs[2], sharex=ax1)
+    # 드로우다운 차트
+    ax3 = plt.subplot(gs[-2], sharex=ax1)
     plot_drawdown(ax3, results_df, style_config)
     
-    # 4. 성과 지표 요약
-    ax4 = plt.subplot(gs[3])
+    # 성과 지표 요약
+    ax4 = plt.subplot(gs[-1])
     plot_performance_summary(ax4, results, style_config)
     
     # X축 데이터 포맷 설정 (중복 날짜 표시 방지)
@@ -402,6 +459,11 @@ def plot_backtest_results(
         # 하단 차트(ax3)를 제외한 차트에서는 X축 레이블 숨기기
         if ax != ax3:
             ax.set_xticklabels([])
+    
+    # MACD 전략일 경우 MACD 축도 설정
+    if is_macd_strategy:
+        format_date_axis(ax_macd)
+        ax_macd.set_xticklabels([])
     
     # 그래프 제목 설정
     plt.suptitle(f"{ticker} 백테스팅 결과 - {strategy} 전략 ({results['start_date']} ~ {results['end_date']})",

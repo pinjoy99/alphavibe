@@ -170,6 +170,9 @@ def apply_style(style: str = 'default') -> Dict[str, Any]:
     plt.rcParams['ytick.labelsize'] = style_config['fontsize']['tick']
     plt.rcParams['legend.fontsize'] = style_config['fontsize']['legend']
     
+    # Unicode minus 문자 대신 일반 하이픈('-') 사용 설정
+    plt.rcParams['axes.unicode_minus'] = False
+    
     # 배경색 설정 (저장 시에만 적용)
     plt.rcParams['savefig.facecolor'] = style_config['colors']['background']
     

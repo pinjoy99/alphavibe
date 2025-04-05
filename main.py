@@ -1,6 +1,9 @@
 import pyupbit
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib
+# 한글 폰트 설정 전에 unicode minus 설정
+matplotlib.rcParams['axes.unicode_minus'] = False
 from datetime import datetime, timedelta
 import os
 import sys
@@ -13,6 +16,8 @@ import numpy as np
 import matplotlib.gridspec as gridspec
 import matplotlib.dates as mdates
 import koreanize_matplotlib  # 한글 폰트 적용
+# 한글 폰트 적용 후 다시 설정 (koreanize가 재설정할 수 있음)
+matplotlib.rcParams['axes.unicode_minus'] = False
 from src.api.upbit_api import get_historical_data, parse_period_to_datetime, get_backtest_data
 from src.backtest import (
     backtest_strategy,
@@ -107,7 +112,9 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
             strategy_params = {
                 "short_window": 12,
                 "long_window": 26,
-                "signal_window": 9
+                "signal_window": 9,
+                "min_crossover_threshold": 0.05,  # 최소 크로스오버 임계값 (5%)
+                "min_holding_period": 3           # 최소 3일 유지 (거래 횟수 감소)
             }
         elif strategy == "rsi":
             # RSI 파라미터
@@ -140,6 +147,9 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
             print(f"연간 수익률: {results['annual_return_pct']:.2f}%")
             print(f"최대 낙폭: {results['max_drawdown_pct']:.2f}%")
             print(f"거래 횟수: {results['trade_count']}")
+            
+            # 그래프 생성 전 unicode minus 설정 다시 적용
+            matplotlib.rcParams['axes.unicode_minus'] = False
             
             # 백테스팅 결과 시각화
             chart_path = plot_backtest_results(ticker, results)
@@ -204,6 +214,10 @@ async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool)
         
         # 시각화 모듈의 함수 사용
         chart_dir = setup_chart_dir(CHART_SAVE_PATH)
+        
+        # 그래프 생성 전 unicode minus 설정 다시 적용
+        matplotlib.rcParams['axes.unicode_minus'] = False
+        
         chart_path = plot_price_chart(df, ticker, chart_dir=chart_dir)
         print(f"Chart saved: {chart_path}")
         

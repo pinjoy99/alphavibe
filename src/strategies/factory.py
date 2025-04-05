@@ -41,7 +41,8 @@ def create_strategy(strategy_name: str, **kwargs) -> Optional[BaseStrategy]:
     elif strategy_name.lower() == "macd":
         filtered_params = {
             k: v for k, v in kwargs.items() 
-            if k in ["short_window", "long_window", "signal_window"]
+            if k in ["short_window", "long_window", "signal_window", 
+                    "min_crossover_threshold", "min_holding_period"]
         }
     elif strategy_name.lower() == "rsi":
         filtered_params = {
