@@ -377,6 +377,24 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
     df = results['df']
     results_df = results['results_df']
     trade_history = results['trade_history']
+    strategy = results.get('strategy', 'Unknown')
+    strategy_params = results.get('strategy_params', {})
+    
+    # 전략 설명 텍스트 생성
+    strategy_text = f"전략: {strategy}"
+    if strategy == "SMA":
+        short_window = strategy_params.get('short_window', '-')
+        long_window = strategy_params.get('long_window', '-')
+        strategy_text += f" (단기: {short_window}, 장기: {long_window})"
+    elif strategy == "BB":
+        window = strategy_params.get('window', '-')
+        std_dev = strategy_params.get('std_dev', '-')
+        strategy_text += f" (기간: {window}, 표준편차: {std_dev})"
+    elif strategy == "MACD":
+        short_window = strategy_params.get('short_window', '-')
+        long_window = strategy_params.get('long_window', '-')
+        signal_window = strategy_params.get('signal_window', '-')
+        strategy_text += f" (단기: {short_window}, 장기: {long_window}, 시그널: {signal_window})"
     
     # 매수/매도 포인트 추출
     buy_points = [trade['date'] for trade in trade_history if trade['type'] == 'buy']
@@ -436,7 +454,7 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
         volume_ax.grid(False)
     
     # 차트 설정
-    ax1.set_title(f"{ticker} 가격 및 전략 신호", fontsize=14, pad=10)
+    ax1.set_title(f"{ticker} 가격 및 전략 신호\n{strategy_text}", fontsize=14, pad=10)
     ax1.set_ylabel('가격 (로그 스케일)', fontsize=12)
     ax1.grid(True, alpha=0.2)
     ax1.legend(loc='upper left', fontsize=10)
@@ -483,7 +501,7 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
     
     # 요약 텍스트 생성
     summary_text = (
-        f"전략 성과 요약\n\n"
+        f"전략 성과 요약 - {strategy}\n\n"
         f"초기 자본금: {initial_capital:,.0f} KRW | 최종 자본금: {final_capital:,.0f} KRW\n"
         f"총 수익률: {total_return_pct:.2f}% | 연간 수익률: {annual_return_pct:.2f}%\n"
         f"최대 낙폭: {max_drawdown_pct:.2f}% | 거래 횟수: {trade_count}\n"
@@ -504,13 +522,13 @@ def plot_backtest_results(ticker: str, results: Dict[str, Any]) -> str:
         ax.tick_params(axis='x', rotation=45)
     
     # 그래프 제목 설정
-    plt.suptitle(f"{ticker} 백테스팅 결과 ({results['start_date']} ~ {results['end_date']})",
+    plt.suptitle(f"{ticker} 백테스팅 결과 - {strategy} 전략 ({results['start_date']} ~ {results['end_date']})",
                  fontsize=16, y=0.98)
     
     # 그래프 저장
     os.makedirs("backtest_results", exist_ok=True)
     current_date = datetime.now().strftime("%Y%m%d")
-    chart_path = f"backtest_results/{ticker}_backtest_{current_date}.png"
+    chart_path = f"backtest_results/{ticker}_{strategy}_backtest_{current_date}.png"
     plt.savefig(chart_path, dpi=300, bbox_inches='tight', facecolor='#333333')
     plt.close(fig)
     
@@ -539,28 +557,37 @@ async def run_backtest(bot: Bot, ticker: str, strategy: str, period: str, initia
     
     if df is not None and not df.empty:
         # 전략 적용
+        strategy_params = {}
         if strategy == "sma":
             # SMA 파라미터 최적화 - 더 긴 이동평균선 기간 사용
             short_window = 10  # 이전: 5
             long_window = 30   # 이전: 20
+            strategy_params = {"short_window": short_window, "long_window": long_window}
             df = apply_sma_strategy(df, short_window=short_window, long_window=long_window)
         elif strategy == "bb":
             # 볼린저 밴드 파라미터
             window = 20
             std_dev = 2.0
+            strategy_params = {"window": window, "std_dev": std_dev}
             df = apply_bollinger_bands_strategy(df, window=window, num_std=std_dev)
         elif strategy == "macd":
             # MACD 파라미터
             short_window = 12
             long_window = 26
             signal_window = 9
+            strategy_params = {"short_window": short_window, "long_window": long_window, "signal_window": signal_window}
             df = apply_macd_strategy(df, short_window=short_window, long_window=long_window, signal_window=signal_window)
         
         # 백테스팅 실행
         results = backtest_strategy(df, initial_capital)
         
+        # 결과에 전략 정보 추가
+        results['strategy'] = strategy.upper()
+        results['strategy_params'] = strategy_params
+        
         # 결과 출력
         print("\n백테스팅 결과:")
+        print(f"전략: {strategy.upper()}")
         print(f"기간: {results['start_date']} ~ {results['end_date']} ({results['total_days']}일)")
         print(f"초기 자본금: {results['initial_capital']:,.0f} KRW")
         print(f"최종 자본금: {results['final_capital']:,.0f} KRW")
