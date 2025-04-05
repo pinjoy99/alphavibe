@@ -114,13 +114,7 @@ chmod +x run.sh
 ./run.sh -b -s bb  # 볼린저 밴드 전략 백테스팅 (단축 옵션)
 ./run.sh -b -s macd -p 6m -i 5000000  # MACD 전략, 6개월, 5백만원 초기 자본
 ```
-
-4. 자동 백테스팅 실행:
-```
-./watch_and_test.sh  # 파일 변경 감지 시 자동 백테스팅
-```
-
-5. 결과 확인:
+4. 결과 확인:
    - 콘솔에 각 종목의 기본 통계 정보가 출력됩니다.
    - `results/analysis` 폴더에 분석 차트 이미지가 저장됩니다.
    - `results/strategy_results` 폴더에 백테스팅 결과 차트 이미지가 저장됩니다.
