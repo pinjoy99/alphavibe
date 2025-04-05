@@ -1,9 +1,22 @@
 from abc import ABC, abstractmethod
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, List, ClassVar, Optional
 
 class BaseStrategy(ABC):
     """트레이딩 전략의 기본 인터페이스"""
+    
+    # 전략 메타데이터 (각 서브클래스에서 덮어씀)
+    STRATEGY_CODE: ClassVar[str] = ""
+    STRATEGY_NAME: ClassVar[str] = ""
+    STRATEGY_DESCRIPTION: ClassVar[str] = ""
+    
+    @classmethod
+    def register_strategy_params(cls) -> List[Dict[str, Any]]:
+        """
+        전략 파라미터 등록 (자동 문서화 및 CLI에서 사용)
+        기본적으로 빈 목록 반환
+        """
+        return []
     
     @abstractmethod
     def apply(self, df: pd.DataFrame) -> pd.DataFrame:

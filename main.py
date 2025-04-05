@@ -24,6 +24,7 @@ from src.backtest import (
     plot_backtest_results
 )
 from src.strategies import create_strategy
+from src.strategies.strategy_registry import StrategyRegistry
 from src.notification import (
     send_telegram_message,
     send_telegram_chart,
@@ -46,7 +47,15 @@ def parse_args():
     parser = argparse.ArgumentParser(description="암호화폐 가격 분석")
     parser.add_argument("--telegram", "-t", action="store_true", help="텔레그램 알림 활성화")
     parser.add_argument("--backtest", "-b", action="store_true", help="백테스팅 모드 활성화")
-    parser.add_argument("--strategy", "-s", choices=["sma", "bb", "macd", "rsi", "sma_stoploss"], default="sma", help="백테스팅 전략 선택 (기본값: sma)")
+    
+    # 사용 가능한 전략 목록 동적 생성
+    StrategyRegistry.discover_strategies()
+    available_strategies = [strategy['code'] for strategy in StrategyRegistry.get_available_strategies()]
+    available_strategies.extend(["sma", "bb", "macd", "rsi"])  # 레거시 전략 추가
+    available_strategies = sorted(list(set(available_strategies)))  # 중복 제거 및 정렬
+    
+    parser.add_argument("--strategy", "-s", choices=available_strategies, default="sma", 
+                      help="백테스팅 전략 선택 (기본값: sma)")
     parser.add_argument("--period", "-p", type=str, default="3m", help="백테스팅 기간 또는 분석 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)")
     parser.add_argument("--invest", "-i", type=float, default=1000000, help="백테스팅 초기 투자금액 (원화)")
     parser.add_argument("--account", "-a", action="store_true", help="계좌 정보 조회")
@@ -101,44 +110,56 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
     if df is not None and not df.empty:
         # 전략 파라미터 설정
         strategy_params = {}
-        if strategy == "sma":
-            # SMA 파라미터 최적화 - 더 긴 이동평균선 기간 사용
-            strategy_params = {
-                "short_window": 10,  # 이전: 5
-                "long_window": 30    # 이전: 20
-            }
-        elif strategy == "bb":
-            # 볼린저 밴드 파라미터
-            strategy_params = {
-                "window": 20,
-                "std_dev": 2.0
-            }
-        elif strategy == "macd":
-            # MACD 파라미터
-            strategy_params = {
-                "short_window": 12,
-                "long_window": 26,
-                "signal_window": 9,
-                "min_crossover_threshold": 0.05,  # 최소 크로스오버 임계값 (5%)
-                "min_holding_period": 3           # 최소 3일 유지 (거래 횟수 감소)
-            }
-        elif strategy == "rsi":
-            # RSI 파라미터
-            strategy_params = {
-                "window": 14,
-                "overbought": 65,
-                "oversold": 35,
-                "exit_overbought": 55,
-                "exit_oversold": 45
-            }
-        elif strategy == "sma_stoploss":
-            # SMA+손익절 전략 파라미터
-            strategy_params = {
-                "short_window": 10,
-                "long_window": 30,
-                "take_profit": 0.10,  # 10% 익절
-                "stop_loss": 0.03     # 3% 손절
-            }
+        # 레지스트리에서 전략 정보 가져오기
+        strategy_info = None
+        for s in StrategyRegistry.get_available_strategies():
+            if s['code'] == strategy:
+                strategy_info = s
+                break
+        
+        # 레지스트리에 등록된 전략이면 기본 파라미터 사용
+        if strategy_info:
+            strategy_params = {p['name']: p['default'] for p in strategy_info['params']}
+        else:
+            # 레거시 전략 파라미터 설정 (기존 코드 유지)
+            if strategy == "sma":
+                # SMA 파라미터 최적화 - 더 긴 이동평균선 기간 사용
+                strategy_params = {
+                    "short_window": 10,  # 이전: 5
+                    "long_window": 30    # 이전: 20
+                }
+            elif strategy == "bb":
+                # 볼린저 밴드 파라미터
+                strategy_params = {
+                    "window": 20,
+                    "std_dev": 2.0
+                }
+            elif strategy == "macd":
+                # MACD 파라미터
+                strategy_params = {
+                    "short_window": 12,
+                    "long_window": 26,
+                    "signal_window": 9,
+                    "min_crossover_threshold": 0.05,  # 최소 크로스오버 임계값 (5%)
+                    "min_holding_period": 3           # 최소 3일 유지 (거래 횟수 감소)
+                }
+            elif strategy == "rsi":
+                # RSI 파라미터
+                strategy_params = {
+                    "window": 14,
+                    "overbought": 65,
+                    "oversold": 35,
+                    "exit_overbought": 55,
+                    "exit_oversold": 45
+                }
+            elif strategy == "sma_stoploss":
+                # SMA+손익절 전략 파라미터
+                strategy_params = {
+                    "short_window": 10,
+                    "long_window": 30,
+                    "take_profit": 0.10,  # 10% 익절
+                    "stop_loss": 0.03     # 3% 손절
+                }
         
         # 전략 객체 생성 및 적용
         strategy_obj = create_strategy(strategy, **strategy_params)
@@ -191,17 +212,7 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
             # 텔레그램 알림
             if enable_telegram:
                 # 결과 메시지 작성
-                params_str = ""
-                if strategy == "sma":
-                    params_str = f"(단기: {strategy_params['short_window']}, 장기: {strategy_params['long_window']})"
-                elif strategy == "bb":
-                    params_str = f"(기간: {strategy_params['window']}, 표준편차: {strategy_params['std_dev']})"
-                elif strategy == "macd":
-                    params_str = f"(단기: {strategy_params['short_window']}, 장기: {strategy_params['long_window']}, 시그널: {strategy_params['signal_window']})"
-                elif strategy == "rsi":
-                    params_str = f"(기간: {strategy_params['window']}, 과매수: {strategy_params['overbought']}, 과매도: {strategy_params['oversold']}, 매도종료: {strategy_params['exit_overbought']}, 매수종료: {strategy_params['exit_oversold']})"
-                elif strategy == "sma_stoploss":
-                    params_str = f"(단기: {strategy_params['short_window']}, 장기: {strategy_params['long_window']}, 익절: {strategy_params['take_profit']*100}%, 손절: {strategy_params['stop_loss']*100}%)"
+                params_str = ", ".join([f"{k}={v}" for k, v in strategy_obj.params.items()])
                 
                 # 메시지 생성과 전송을 분리된 모듈 함수 사용
                 result_message = get_telegram_backtest_message(ticker, strategy_obj.name, params_str, results)

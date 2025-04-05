@@ -12,6 +12,52 @@ PERIOD="3m"
 INVEST="1000000"
 ACCOUNT="false"
 
+# 사용 가능한 전략 목록 가져오기
+get_available_strategies() {
+  echo "가능한 전략을 확인하는 중..."
+  python -c "
+try:
+  from src.strategies.strategy_registry import StrategyRegistry
+  StrategyRegistry.discover_strategies()
+  strategies = StrategyRegistry.get_available_strategies()
+  if strategies:
+    for s in sorted(strategies, key=lambda x: x['code']):
+      print(f\"{s['code']}|{s['name']}|{s['description']}\")
+  else:
+    print('레지스트리에서 전략을 찾을 수 없습니다.')
+except Exception as e:
+  print(f'오류: {str(e)}')
+"
+}
+
+# 전략 도움말 생성
+generate_strategy_help() {
+  # 전략 레지스트리에서 가져오기
+  IFS=$'\n'
+  strategies=($(get_available_strategies))
+  
+  # 기본 전략 정보 표시
+  echo "  sma   - 이동평균선 전략: 단기(10일)와 장기(30일) 이동평균선의 교차 시점에 매수/매도 신호 발생"
+  echo "          골든 크로스(단기>장기) 시 매수, 데드 크로스(단기<장기) 시 매도"
+  echo "  bb    - 볼린저 밴드 전략: 20일 이동평균선을 중심으로 표준편차(2.0)에 따른 밴드를 활용"
+  echo "          하단 밴드 터치 시 매수, 상단 밴드 터치 시 매도"
+  echo "  macd  - MACD 전략: 단기(12일)와 장기(26일) 지수이동평균의 차이와 신호선(9일)을 활용"
+  echo "          MACD선이 신호선을 상향 돌파 시 매수, 하향 돌파 시 매도"
+  echo "  rsi   - RSI 전략: 14일 기준 RSI 지표로 과매수(70)/과매도(30) 상태를 활용"
+  echo "          과매도 상태에서 반등 시 매수, 과매수 상태에서 하락 시 매도"
+  echo "  sma_stoploss - SMA+손익절 전략: 기본 SMA 전략에 익절(10%) 및 손절(-3%) 규칙 추가"
+  echo "          수익이 10%에 도달하면 익절하고, 손실이 -3%에 도달하면 손절"
+  
+  # 새로운 자동 감지 전략 표시
+  for strategy in "${strategies[@]}"; do
+    IFS='|' read -r code name desc <<< "$strategy"
+    # 이미 위에서 표시된 기본 전략은 제외
+    if [[ "$code" != "sma" && "$code" != "bb" && "$code" != "macd" && "$code" != "rsi" && "$code" != "sma_stoploss" ]]; then
+      echo "  $code - $name: $desc"
+    fi
+  done
+}
+
 # 매개변수 처리
 while [[ $# -gt 0 ]]; do
   key="$1"
@@ -47,23 +93,14 @@ while [[ $# -gt 0 ]]; do
       echo "옵션:"
       echo "  --telegram, -t             텔레그램 알림 활성화"
       echo "  --backtest, -b             백테스팅 모드 활성화"
-      echo "  --strategy, -s STRATEGY    백테스팅 전략 선택 (sma, bb, macd, rsi, sma_stoploss 중 선택, 기본값: sma)"
+      echo "  --strategy, -s STRATEGY    백테스팅 전략 선택 (기본값: sma)"
       echo "  --period, -p PERIOD        백테스팅 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y, 기본값: 3m)"
       echo "  --invest, -i AMOUNT        백테스팅 초기 투자금액 (기본값: 1,000,000원)"
       echo "  --account, -a              계좌 정보 조회 모드 활성화"
       echo "  --help, -h                 도움말 표시"
       echo ""
       echo "전략 정보:"
-      echo "  sma   - 이동평균선 전략: 단기(10일)와 장기(30일) 이동평균선의 교차 시점에 매수/매도 신호 발생"
-      echo "          골든 크로스(단기>장기) 시 매수, 데드 크로스(단기<장기) 시 매도"
-      echo "  bb    - 볼린저 밴드 전략: 20일 이동평균선을 중심으로 표준편차(2.0)에 따른 밴드를 활용"
-      echo "          하단 밴드 터치 시 매수, 상단 밴드 터치 시 매도"
-      echo "  macd  - MACD 전략: 단기(12일)와 장기(26일) 지수이동평균의 차이와 신호선(9일)을 활용"
-      echo "          MACD선이 신호선을 상향 돌파 시 매수, 하향 돌파 시 매도"
-      echo "  rsi   - RSI 전략: 14일 기준 RSI 지표로 과매수(70)/과매도(30) 상태를 활용"
-      echo "          과매도 상태에서 반등 시 매수, 과매수 상태에서 하락 시 매도"
-      echo "  sma_stoploss - SMA+손익절 전략: 기본 SMA 전략에 익절(10%) 및 손절(-3%) 규칙 추가"
-      echo "          수익이 10%에 도달하면 익절하고, 손실이 -3%에 도달하면 손절"
+      generate_strategy_help
       echo ""
       echo "기간 표기법:"
       echo "  1d    - 1일 (day)          1w    - 1주 (week)"
@@ -82,6 +119,7 @@ while [[ $# -gt 0 ]]; do
       echo "  ./run.sh -b                      SMA 전략으로 3개월 백테스팅 실행"
       echo "  ./run.sh -b -s macd -p 6m        MACD 전략으로 6개월 백테스팅 실행"
       echo "  ./run.sh -b -s rsi -p 3m -i 2000000  RSI 전략, 3개월 기간, 초기자본 200만원으로 백테스팅"
+      echo "  ./run.sh -b -s doomsday -p 1y    둠스데이 크로스 전략으로 1년간 백테스팅 실행"
       exit 0
       ;;
     *)

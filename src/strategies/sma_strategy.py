@@ -1,9 +1,36 @@
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, Any, List, ClassVar
 from .base_strategy import BaseStrategy
 
 class SMAStrategy(BaseStrategy):
     """단순 이동평균선(SMA) 전략 구현"""
+    
+    # 전략 메타데이터
+    STRATEGY_CODE: ClassVar[str] = "sma"
+    STRATEGY_NAME: ClassVar[str] = "이동평균선 전략"
+    STRATEGY_DESCRIPTION: ClassVar[str] = "단기/장기 이동평균선의 교차 시점에 매수/매도 신호 발생"
+    
+    @classmethod
+    def register_strategy_params(cls) -> List[Dict[str, Any]]:
+        """전략 파라미터 등록"""
+        return [
+            {
+                "name": "short_window",
+                "type": "int",
+                "default": 10,
+                "description": "단기 이동평균선 기간",
+                "min": 2,
+                "max": 50
+            },
+            {
+                "name": "long_window",
+                "type": "int",
+                "default": 30,
+                "description": "장기 이동평균선 기간",
+                "min": 5,
+                "max": 200
+            }
+        ]
     
     def __init__(self, short_window: int = 10, long_window: int = 30):
         """
@@ -56,7 +83,7 @@ class SMAStrategy(BaseStrategy):
     @property
     def name(self) -> str:
         """전략 이름"""
-        return "SMA"
+        return self.STRATEGY_NAME
     
     @property
     def params(self) -> Dict[str, Any]:
