@@ -55,16 +55,6 @@ chmod +x run.sh
 ./run.sh --backtest --strategy sma --period 6m --invest 5000000  # 추가 옵션
 ```
 
-### 자동 백테스팅 실행
-
-소스 파일 변경 시 자동으로 백테스트를 실행하는 스크립트:
-```
-chmod +x watch_and_test.sh
-./watch_and_test.sh                    # 기본 설정으로 실행
-./watch_and_test.sh --files "src/strategies/*.py main.py"  # 특정 파일만 모니터링
-./watch_and_test.sh --command "./run.sh --backtest --strategy macd"  # 다른 백테스트 명령 실행
-```
-
 ## 환경 변수 설정
 
 프로그램 실행에 필요한 환경 변수는 `.env` 파일에 설정합니다.
