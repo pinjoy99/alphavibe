@@ -5,8 +5,8 @@
 echo "파일 변경 감지 후 자동 백테스팅 모드를 시작합니다..."
 echo "종료하려면 Ctrl+C를 누르세요."
 
-# 모니터링할 파일 지정 (기본값)
-WATCH_FILES="main.py src/api/*.py"
+# 모니터링할 파일 지정 (기본값) - 전략 디렉토리 추가
+WATCH_FILES="main.py src/api/*.py src/backtest/*.py src/strategies/*.py"
 
 # 백테스팅 옵션 (기본값)
 BACKTEST_OPTIONS="-b"
@@ -33,7 +33,7 @@ while [[ $# -gt 0 ]]; do
     --help|-h)
       echo "사용법: ./watch_and_test.sh [옵션]"
       echo "옵션:"
-      echo "  --files, -f \"FILES\"     모니터링할 파일 패턴 (기본값: \"main.py src/api/*.py\")"
+      echo "  --files, -f \"FILES\"     모니터링할 파일 패턴 (기본값: \"main.py src/api/*.py src/backtest/*.py src/strategies/*.py\")"
       echo "  --options, -o \"OPTIONS\"  백테스팅 실행 옵션 (기본값: \"-b\")"
       echo "  --interval, -i SECONDS   파일 확인 간격 (초, 기본값: 2)"
       echo "  --help, -h               도움말 표시"
@@ -106,8 +106,10 @@ echo "-------------------------------------"
 ./run.sh $BACKTEST_OPTIONS
 if [ $? -eq 0 ]; then
   ((SUCCESS_COUNT++))
+  echo "✅ 백테스팅이 성공적으로 완료되었습니다!"
 else
   ((FAIL_COUNT++))
+  echo "❌ 백테스팅 실행 중 오류가 발생했습니다."
 fi
 ((TOTAL_RUNS++))
 
@@ -130,8 +132,10 @@ while true; do
     ./run.sh $BACKTEST_OPTIONS
     if [ $? -eq 0 ]; then
       ((SUCCESS_COUNT++))
+      echo "✅ 백테스팅이 성공적으로 완료되었습니다!"
     else
       ((FAIL_COUNT++))
+      echo "❌ 백테스팅 실행 중 오류가 발생했습니다."
     fi
     ((TOTAL_RUNS++))
     
