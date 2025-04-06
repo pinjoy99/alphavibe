@@ -27,45 +27,17 @@ get_available_strategies() {
 try:
   from src.strategies.strategy_registry import StrategyRegistry
   
-  # 레거시 전략 정보 (레지스트리에 아직 등록되지 않은 기본 전략들)
-  legacy_strategies = {
-    'bb': {
-      'name': '볼린저 밴드 전략',
-      'description': '20일 이동평균선을 중심으로 표준편차(2.0)에 따른 밴드를 활용, 하단 밴드 터치 시 매수, 상단 밴드 터치 시 매도'
-    },
-    'macd': {
-      'name': 'MACD 전략',
-      'description': '단기(12일)와 장기(26일) 지수이동평균의 차이와 신호선(9일)을 활용, MACD선이 신호선을 상향 돌파 시 매수, 하향 돌파 시 매도'
-    },
-    'rsi': {
-      'name': 'RSI 전략',
-      'description': '14일 기준 RSI 지표로 과매수(70)/과매도(30) 상태를 활용, 과매도 상태에서 반등 시 매수, 과매수 상태에서 하락 시 매도'
-    },
-    'sma_stoploss': {
-      'name': 'SMA+손익절 전략',
-      'description': '기본 SMA 전략에 익절(10%) 및 손절(-3%) 규칙 추가, 수익이 10%에 도달하면 익절하고, 손실이 -3%에 도달하면 손절'
-    }
-  }
-  
   # 레지스트리에서 전략 가져오기
   registry = StrategyRegistry()
   registry.discover_strategies()
   strategies = registry.get_available_strategies()
   
-  # 등록된 전략 코드 목록
-  registered_codes = [s['code'] for s in strategies]
-  
-  # 레지스트리 전략과 레거시 전략 결합
+  # 등록된 전략 출력
   for strategy in strategies:
     code = strategy['code']
     name = strategy['name']
     desc = strategy['description']
     print(f'{code}|{name}|{desc}')
-  
-  # 레거시 전략 중 레지스트리에 없는 것들 추가
-  for code, info in legacy_strategies.items():
-    if code not in registered_codes:
-      print(f'{code}|{info[\"name\"]}|{info[\"description\"]}')
 except Exception as e:
   print(f'Error: {e}')
   "

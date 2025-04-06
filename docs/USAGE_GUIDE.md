@@ -1,0 +1,143 @@
+# 사용 방법
+
+## 기본 사용법
+
+1. 환경 설정:
+```
+./setup.sh
+```
+
+2. 기본 실행:
+```
+./run.sh  # 기본 실행 (가격 분석)
+./run.sh --telegram  # 텔레그램 알림 활성화
+./run.sh -t  # 텔레그램 알림 활성화 (단축 옵션)
+```
+
+3. 코인 선택 및 데이터 간격 옵션:
+```
+./run.sh --coins BTC,SOL  # BTC와 SOL만 분석
+./run.sh -c BTC,ETH,DOGE  # 여러 코인 지정 (단축 옵션)
+./run.sh --interval minute15  # 15분봉 데이터로 분석 (차트 및 데이터)
+./run.sh -v minute60  # 1시간봉 데이터로 분석 (단축 옵션)
+./run.sh -c BTC -v minute15 -p 1m  # BTC를 15분봉으로 1개월 데이터 분석
+```
+
+데이터 간격 옵션(-v 또는 --interval)을 사용하면 해당 간격으로 데이터를 조회하고 차트를 생성합니다. 지원되는 간격은 다음과 같습니다:
+- day: 일봉 데이터
+- minute1, minute3, minute5: 1분, 3분, 5분봉
+- minute15, minute30: 15분, 30분봉
+- minute60, minute240: 1시간, 4시간봉
+
+## 백테스팅 활용
+
+1. 사용 가능한 전략 확인:
+```
+./run.sh --help
+```
+이 명령을 실행하면 현재 시스템에서 사용 가능한 모든 전략이 자동으로 표시됩니다. 새로운 전략을 추가하면 별도의 설정 없이 이 목록에 자동으로 표시됩니다.
+
+2. 백테스팅 실행:
+```
+./run.sh --backtest --strategy sma  # SMA 전략 백테스팅
+./run.sh -b -s bb  # 볼린저 밴드 전략 백테스팅 (단축 옵션)
+./run.sh -b -s macd -p 6m -i 5000000  # MACD 전략, 6개월, 5백만원 초기 자본
+./run.sh -b -c SOL -s rsi  # SOL 코인에 대해 RSI 전략으로 백테스팅
+./run.sh -b -c BTC,ETH -v minute240  # BTC, ETH에 대해 4시간봉 데이터로 백테스팅
+```
+
+3. 데이터 부족 경고:
+
+각 전략은 정상 작동을 위해 특정 개수 이상의 데이터 행이 필요합니다. 데이터가 부족한 경우(예: 단기간 백테스팅) 시스템은 다음과 같은 친화적인 경고 메시지를 표시합니다:
+
+```
+⚠️ 경고: 전략 적용에 최소 35개 행이 필요합니다. 현재: 31
+다음 옵션을 시도해보세요:
+  1. 더 긴 기간 사용: -p 3m 또는 -p 6m
+  2. 더 짧은 시간 간격 사용: -v minute60 또는 -v minute30
+  3. 더 많은 데이터가 필요한 전략이므로 다른 전략을 시도
+```
+
+이런 경고가 표시되면 다음 해결 방법을 시도해 보세요:
+- 더 긴 기간의 데이터 사용: `-p 3m` 또는 `-p 6m`
+- 더 작은 시간 간격 사용: `-v minute60` 또는 `-v minute30`
+- 필요한 데이터가 더 적은 다른 전략 선택
+
+## 계좌 정보 조회
+
+```
+./run.sh --account  # 계좌 정보 조회
+./run.sh -a  # 계좌 정보 조회 (단축 옵션)
+./run.sh -a -t  # 계좌 정보 조회 및 텔레그램 알림 활성화
+```
+
+계좌 정보 조회 기능은 다음 정보를 제공합니다:
+- 보유 현금
+- 총 자산 가치
+- 코인별 보유 현황 (가치 기준 정렬)
+- 코인별 손익 정보 (금액 및 백분율)
+- 소액 코인 통합 요약
+- 최근 주문 내역
+- 자산 분포 및 손익 시각화 차트
+
+## 결과 확인
+
+- 콘솔에 각 종목의 기본 통계 정보가 출력됩니다.
+- `results/analysis` 폴더에 분석 차트 이미지가 저장됩니다.
+- `results/strategy_results` 폴더에 백테스트 결과 차트 이미지가 저장됩니다.
+- `results/account` 폴더에 계좌 정보 차트 이미지가 저장됩니다.
+- `results/account_history` 폴더에 계좌 정보 히스토리가 CSV 파일로 저장됩니다.
+- 텔레그램 알림을 활성화한 경우, 봇을 통해 알림과 차트가 전송됩니다.
+
+## 차트 스타일 변경
+
+차트 스타일을 변경하여 시각화 결과를 커스터마이징할 수 있습니다:
+
+```
+./run.sh --style dark  # 다크 모드 스타일로 차트 생성
+./run.sh -b -s sma --style tradingview  # 트레이딩뷰 스타일로 백테스트 차트 생성
+./run.sh -a --style dark  # 다크 모드로 계좌 정보 차트 생성
+```
+
+지원 스타일:
+- `default`: 기본 스타일 (밝은 배경, 기본 색상)
+- `dark`: 다크 모드 (어두운 배경, 밝은 색상)
+- `tradingview`: 트레이딩뷰 스타일 (전문 거래 플랫폼과 유사한 디자인)
+
+## 시각화 모듈 직접 활용
+
+프로젝트 내에서 시각화 모듈을 직접 활용하여 차트를 생성할 수 있습니다:
+
+```python
+# 기본 차트 생성
+from src.visualization import plot_price_with_indicators
+
+chart_path = plot_price_with_indicators(
+    df,                     # OHLCV 데이터
+    "KRW-BTC",              # 티커 심볼
+    chart_type="candlestick", # 차트 타입 (candlestick, ohlc, line)
+    show_volume=True,       # 거래량 표시
+    ma_windows=[20, 50, 200], # 이동평균선 기간
+    show_bollinger=True,    # 볼린저 밴드 표시
+    style="dark"            # 차트 스타일
+)
+
+# 백테스트 결과 시각화
+from src.visualization import plot_backtest_results
+
+chart_path = plot_backtest_results(
+    price_data,             # 가격 데이터
+    trade_history,          # 거래 내역
+    "SMA",                  # 전략 이름
+    "KRW-BTC",              # 티커 심볼
+    initial_capital=1000000, # 초기 자본금
+    style="tradingview"     # 차트 스타일
+)
+
+# 자산 분포 차트
+from src.visualization import plot_asset_distribution
+
+chart_path = plot_asset_distribution(
+    account_summary,        # 계좌 요약 정보
+    style="dark"            # 차트 스타일
+) 

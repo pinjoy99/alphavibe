@@ -34,13 +34,13 @@ from src.notification import (
 
 # 시각화 모듈 추가
 from src.visualization import (
-    plot_price_chart,
+    plot_price_with_indicators,
     setup_chart_dir
 )
 
 # 계좌 조회 기능 추가
 from src.trading.account import AccountManager
-from src.visualization.account_charts import plot_asset_distribution, plot_profit_loss
+from src.visualization.trading_charts import plot_asset_distribution, plot_profit_loss
 
 # 설정 모듈 추가
 from src.utils.config import DEFAULT_COINS, DEFAULT_INTERVAL, DEFAULT_BACKTEST_PERIOD, DEFAULT_INITIAL_CAPITAL
@@ -141,7 +141,13 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                     print(f"  3. 현재 시장 조건에 더 적합한 다른 전략 시도")
                 
                 # 백테스팅 실행
-                results = backtest_strategy(df, initial_capital)
+                results = backtest_strategy(
+                    df=df, 
+                    strategy_func=strategy_obj.generate_signals, 
+                    initial_capital=initial_capital,
+                    strategy_name=strategy_obj.name,
+                    ticker=ticker
+                )
                 
                 # 결과에 전략 정보 추가
                 results['strategy'] = strategy_obj.name
@@ -154,34 +160,51 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                 print(f"전략: {strategy_obj.name}")
                 print(f"기간: {results['start_date']} ~ {results['end_date']} ({results['total_days']}일)")
                 print(f"초기 자본금: {results['initial_capital']:,.0f} KRW")
-                print(f"최종 자본금: {results['final_capital']:,.0f} KRW")
-                print(f"총 수익률: {results['total_return_pct']:.2f}%")
-                print(f"연간 수익률: {results['annual_return_pct']:.2f}%")
-                print(f"최대 낙폭: {results['max_drawdown_pct']:.2f}%")
-                print(f"거래 횟수: {results['trade_count']}")
+                print(f"최종 자본금: {results.get('final_capital', results.get('final_asset', 0)):,.0f} KRW")
+                print(f"총 수익률: {results.get('total_return_pct', results.get('return_pct', 0)):.2f}%")
+                print(f"연간 수익률: {results.get('annual_return_pct', 0):.2f}%")
+                print(f"최대 낙폭: {results.get('max_drawdown_pct', 0):.2f}%")
+                print(f"거래 횟수: {results.get('trade_count', results.get('total_trades', 0))}")
                 
                 # 거래 내역 세부 정보 출력 (선택적)
                 print_detailed_trades = True  # 상세 거래 내역 출력 여부
-                if print_detailed_trades and results['trade_history']:
+                if print_detailed_trades and isinstance(results['trade_history'], pd.DataFrame) and not results['trade_history'].empty:
                     print("\n주요 거래 내역:")
-                    for i, trade in enumerate(results['trade_history']):
+                    for i, trade in enumerate(results['trade_history'].itertuples()):
                         if i >= 5:  # 최대 5개만 출력
                             print(f"... 총 {len(results['trade_history'])}개 거래 중 일부만 표시")
                             break
                         
-                        trade_type = "매수" if trade['type'] == 'buy' else "매도"
-                        position_change = trade.get('position_change', 0)
+                        trade_type = "매수" if getattr(trade, 'type', '') == 'buy' else "매도"
+                        position_change = getattr(trade, 'position_change', 0)
                         position_str = f"포지션 변화: {position_change*100:.1f}%" if position_change else ""
                         
-                        print(f"{trade['date'].strftime('%Y-%m-%d')} | {trade_type} | " +
-                              f"가격: {trade['price']:,.0f} KRW | " +
-                              f"수량: {trade.get('amount', 0):.8f} | {position_str}")
+                        print(f"{trade.Index.strftime('%Y-%m-%d')} | {trade_type} | " +
+                              f"가격: {getattr(trade, 'price', 0):,.0f} KRW | " +
+                              f"수량: {getattr(trade, 'amount', 0):.8f} | {position_str}")
                 
                 # 그래프 생성 전 unicode minus 설정 다시 적용
                 matplotlib.rcParams['axes.unicode_minus'] = False
                 
                 # 백테스팅 결과 시각화
-                chart_path = plot_backtest_results(ticker, results)
+                from src.utils.config import BACKTEST_CHART_PATH
+                try:
+                    # 백테스트 결과를 적절히 시각화하는 함수 사용
+                    from src.backtest.result_processor import visualize_results
+                    chart_path = visualize_results(
+                        df=df,
+                        signals=results.get('trade_history', pd.DataFrame()),
+                        cash_history=results.get('cash_history', []),
+                        coin_amount_history=results.get('coin_amount_history', []),
+                        strategy_name=strategy_obj.name,
+                        ticker=ticker,
+                        initial_capital=initial_capital,
+                        chart_dir=BACKTEST_CHART_PATH
+                    )
+                    results['chart_path'] = chart_path
+                except Exception as e:
+                    print(f"차트 생성 중 오류 발생: {e}")
+                    chart_path = None
                 
                 # 텔레그램 알림
                 if enable_telegram:
@@ -225,50 +248,85 @@ async def analyze_ticker(bot: Optional[Bot], ticker: str, enable_telegram: bool,
     if enable_telegram:
         await send_telegram_message(f"🔍 {ticker} 분석 시작... (간격: {interval}, 기간: {period})", enable_telegram, bot)
     
-    # 데이터 조회
+    # 새로운 분석 모듈 사용
     try:
-        # 기간에 맞게 데이터 조회 (백테스팅 함수 활용)
-        df = get_backtest_data(ticker, period, interval)
+        from src.analysis import analyze_market
         
-        if df is not None and not df.empty:
-            # 기본 통계 계산
-            stats = {
-                'start_date': df.index[0].strftime('%Y-%m-%d'),
-                'end_date': df.index[-1].strftime('%Y-%m-%d'),
-                'highest_price': df['high'].max(),
-                'lowest_price': df['low'].min(),
-                'volume': df['volume'].sum()
-            }
-            
-            # 콘솔 출력
-            print("\n기본 통계:")
-            print(f"시작일: {stats['start_date']}")
-            print(f"종료일: {stats['end_date']}")
-            print(f"최고가: {stats['highest_price']:,.0f} KRW")
-            print(f"최저가: {stats['lowest_price']:,.0f} KRW")
-            print(f"총 거래량: {stats['volume']:,.0f}")
-            
-            # 차트 디렉토리 설정
-            chart_dir = setup_chart_dir(CHART_SAVE_PATH)
-            
-            # 그래프 생성 전 unicode minus 설정 다시 적용
-            matplotlib.rcParams['axes.unicode_minus'] = False
-            
-            # 차트 생성 - interval과 period 정보 전달
-            chart_path = plot_price_chart(df, ticker, chart_dir=chart_dir, interval=interval, period=period)
-            
-            # 텔레그램 알림
-            if enable_telegram:
-                stats_message = get_telegram_analysis_message(ticker, stats)
-                await send_telegram_chart(chart_path, stats_message, enable_telegram, bot)
-        else:
-            error_message = f"{ticker} 데이터 조회 실패"
+        # 분석 수행
+        analysis_result = analyze_market(ticker, period, interval)
+        
+        if 'error' in analysis_result:
+            error_message = f"{ticker} 분석 실패: {analysis_result['error']}"
             print(error_message)
             if enable_telegram:
                 await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
+            return
+            
+        # 분석 결과 출력
+        stats = analysis_result['stats']
+        print("\n기본 통계:")
+        print(f"시작일: {stats['start_date']}")
+        print(f"종료일: {stats['end_date']}")
+        print(f"최고가: {stats['highest_price']:,.0f} KRW")
+        print(f"최저가: {stats['lowest_price']:,.0f} KRW")
+        print(f"총 거래량: {stats['volume']:,.0f}")
+        
+        # 기술적 지표 정보 출력
+        print("\n기술적 지표 분석:")
+        for indicator, value in analysis_result['technical_indicators'].items():
+            print(f"{indicator}: {value}")
+        
+        # 지지선/저항선 정보 출력
+        if 'support_levels' in analysis_result and analysis_result['support_levels']:
+            print("\n주요 지지선:")
+            for level in analysis_result['support_levels']:
+                print(f"  - {level:,.0f} KRW")
+        
+        if 'resistance_levels' in analysis_result and analysis_result['resistance_levels']:
+            print("\n주요 저항선:")
+            for level in analysis_result['resistance_levels']:
+                print(f"  - {level:,.0f} KRW")
+                
+        # 차트 경로 가져오기
+        chart_path = analysis_result.get('chart_path', '')
+        
+        # 텔레그램 알림
+        if enable_telegram and chart_path:
+            # 기술적 지표 요약 메시지 생성
+            technical_message = f"📊 *{ticker} 기술적 분석*\n\n"
+            technical_message += f"현재가: `{stats['current_price']:,.0f} KRW` "
+            
+            # 가격 변화 정보 추가
+            pct_change = stats['price_pct_change']
+            price_change = stats['price_change']
+            change_sign = "+" if price_change > 0 else ""
+            technical_message += f"({change_sign}{pct_change:.2f}%)\n\n"
+            
+            # 지지/저항선 추가
+            if analysis_result['support_levels']:
+                support_text = ', '.join([f"{level:,.0f}" for level in analysis_result['support_levels']])
+                technical_message += f"🔻 *지지선*: `{support_text} KRW`\n"
+            
+            if analysis_result['resistance_levels']:
+                resistance_text = ', '.join([f"{level:,.0f}" for level in analysis_result['resistance_levels']])
+                technical_message += f"🔺 *저항선*: `{resistance_text} KRW`\n\n"
+            
+            # 기술적 지표 요약 추가
+            technical_message += "*기술적 지표 요약:*\n"
+            for indicator, value in analysis_result['technical_indicators'].items():
+                technical_message += f"• *{indicator}*: {value}\n"
+            
+            # 차트와 함께 메시지 전송
+            await send_telegram_chart(chart_path, technical_message, enable_telegram, bot)
+        else:
+            if not chart_path:
+                print("\n⚠️ 경고: 차트 생성 실패")
+                
     except Exception as e:
         error_message = f"{ticker} 분석 중 오류 발생: {e}"
         print(error_message)
+        import traceback
+        traceback.print_exc()
         if enable_telegram:
             await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
 
@@ -442,17 +500,13 @@ async def main_async(args):
     tickers = [f"KRW-{coin}" for coin in coins]
     
     # 텔레그램 봇 설정
+    TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
     bot = None
-    if enable_telegram:
-        # 환경 변수에서 텔레그램 설정 읽기
-        TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
-        
-        # 텔레그램 봇 초기화
-        if TELEGRAM_TOKEN:
-            bot = Bot(token=TELEGRAM_TOKEN)
-            print("텔레그램 봇이 설정되었습니다.")
-        else:
-            print("텔레그램 봇 토큰이 설정되지 않았습니다.")
+    if TELEGRAM_BOT_TOKEN:
+        bot = Bot(token=TELEGRAM_BOT_TOKEN)
+        print("텔레그램 봇이 설정되었습니다.")
+    else:
+        print("텔레그램 봇 토큰이 설정되지 않았습니다.")
     
     # 계좌 정보 조회 모드
     if enable_account:

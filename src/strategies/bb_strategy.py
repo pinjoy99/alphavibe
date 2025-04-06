@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import Dict, Any
 from .base_strategy import BaseStrategy
+from src.indicators.volatility import bollinger_bands
 
 class BollingerBandsStrategy(BaseStrategy):
     """볼린저 밴드 전략 구현"""
@@ -56,17 +57,16 @@ class BollingerBandsStrategy(BaseStrategy):
         # 1. 데이터 유효성 검사
         df = self.validate_data(df).copy()
         
-        # 2. 볼린저 밴드 계산
-        df['ma'] = df['close'].rolling(window=self._window).mean()
-        df['std'] = df['close'].rolling(window=self._window).std()
-        df['upper_band'] = df['ma'] + (df['std'] * self._std_dev)
-        df['lower_band'] = df['ma'] - (df['std'] * self._std_dev)
+        # 2. 볼린저 밴드 계산 - indicators 모듈 사용
+        df['upper_band'], df['ma'], df['lower_band'] = bollinger_bands(
+            df['close'], window=self._window, num_std=self._std_dev
+        )
         
         # 3. 기본 신호 설정
         df['signal'] = 0
         
         # 4. 유효한 데이터에만 신호 적용 (NaN 값 처리)
-        valid_idx = df['ma'].notna() & df['std'].notna() & df['upper_band'].notna() & df['lower_band'].notna()
+        valid_idx = df['ma'].notna() & df['upper_band'].notna() & df['lower_band'].notna()
         df.loc[valid_idx & (df['close'] < df['lower_band']), 'signal'] = 1  # 매수 신호 (하단 밴드 아래로)
         df.loc[valid_idx & (df['close'] > df['upper_band']), 'signal'] = -1  # 매도 신호 (상단 밴드 위로)
         

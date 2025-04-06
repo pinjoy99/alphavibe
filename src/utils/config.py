@@ -15,6 +15,7 @@ load_dotenv()
 
 # 경로 설정
 CHART_SAVE_PATH = 'results/analysis'
+BACKTEST_CHART_PATH = 'results/backtest_charts'
 BACKTEST_RESULT_PATH = 'results/strategy_results'
 
 # 하위 호환성을 위한 별칭
@@ -49,7 +50,7 @@ UPBIT_ACCESS_KEY = os.getenv('UPBIT_ACCESS_KEY')
 UPBIT_SECRET_KEY = os.getenv('UPBIT_SECRET_KEY')
 
 # 알림 관련 환경 변수
-TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 # 기타 알림 서비스 설정 (사용하지 않는 경우 None)

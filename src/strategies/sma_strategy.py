@@ -1,6 +1,7 @@
 import pandas as pd
 from typing import Dict, Any, List, ClassVar
 from .base_strategy import BaseStrategy
+from src.indicators.moving_averages import sma, calculate_moving_averages
 
 class SMAStrategy(BaseStrategy):
     """단순 이동평균선(SMA) 전략 구현"""
@@ -58,17 +59,28 @@ class SMAStrategy(BaseStrategy):
         # 1. 데이터 유효성 검사
         df = self.validate_data(df).copy()
         
-        # 2. 단기/장기 이동평균선 계산
-        df['short_ma'] = df['close'].rolling(window=self._short_window).mean()
-        df['long_ma'] = df['close'].rolling(window=self._long_window).mean()
+        # 2. indicators 모듈을 사용하여 이동평균선 계산
+        ma_types = ['sma', 'sma']
+        windows = [self._short_window, self._long_window]
+        
+        # 2.1 calculate_moving_averages 함수 사용
+        df = calculate_moving_averages(df, ma_types=ma_types, windows=windows)
+        
+        # 2.2 단기/장기 이동평균선 컬럼 이름
+        short_ma_col = f'sma_{self._short_window}'
+        long_ma_col = f'sma_{self._long_window}'
+        
+        # 2.3 레거시 호환을 위해 'short_ma'와 'long_ma' 컬럼도 추가
+        df['short_ma'] = df[short_ma_col]
+        df['long_ma'] = df[long_ma_col]
         
         # 3. 기본 신호 설정
         df['signal'] = 0
         
         # 4. 유효한 데이터에만 신호 적용 (NaN 값 처리)
-        valid_idx = df['short_ma'].notna() & df['long_ma'].notna()
-        df.loc[valid_idx & (df['short_ma'] > df['long_ma']), 'signal'] = 1  # 매수 신호
-        df.loc[valid_idx & (df['short_ma'] < df['long_ma']), 'signal'] = -1  # 매도 신호
+        valid_idx = df[short_ma_col].notna() & df[long_ma_col].notna()
+        df.loc[valid_idx & (df[short_ma_col] > df[long_ma_col]), 'signal'] = 1  # 매수 신호
+        df.loc[valid_idx & (df[short_ma_col] < df[long_ma_col]), 'signal'] = -1  # 매도 신호
         
         # 5. 신호 변화 감지
         df['position'] = df['signal'].diff()
@@ -91,4 +103,40 @@ class SMAStrategy(BaseStrategy):
         return {
             "short_window": self._short_window,
             "long_window": self._long_window
-        } 
+        }
+        
+    def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        백테스팅 엔진을 위한 매수/매도 신호 생성
+        
+        Parameters:
+            df (pd.DataFrame): 신호가 추가된 데이터프레임
+            
+        Returns:
+            pd.DataFrame: 매수/매도 신호 데이터프레임
+        """
+        # apply 메서드를 통해 신호 생성
+        if 'signal' not in df.columns:
+            df = self.apply(df)
+            
+        # 신호 변화 지점만 추출
+        signals = pd.DataFrame(index=df.index)
+        signals['price'] = df['close']
+        
+        # 매수/매도 신호 추출
+        buy_signals = df[df['position'] > 0].index
+        sell_signals = df[df['position'] < 0].index
+        
+        # 신호 데이터프레임 구성
+        buys = pd.DataFrame(index=buy_signals)
+        buys['type'] = 'buy'
+        buys['price'] = df.loc[buy_signals, 'close']
+        buys['ratio'] = 1.0  # 전액 매수
+        
+        sells = pd.DataFrame(index=sell_signals)
+        sells['type'] = 'sell'
+        sells['price'] = df.loc[sell_signals, 'close']
+        sells['ratio'] = 1.0  # 전액 매도
+        
+        # 매수/매도 신호 결합
+        return pd.concat([buys, sells]).sort_index() 

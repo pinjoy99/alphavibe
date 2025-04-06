@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any
 from .base_strategy import BaseStrategy
+from src.indicators.momentum import rsi
 
 class RSIStrategy(BaseStrategy):
     """RSI(상대강도지수) 전략 구현"""
@@ -24,7 +25,7 @@ class RSIStrategy(BaseStrategy):
             {
                 "name": "overbought",
                 "type": "float",
-                "default": 65.0,
+                "default": 70.0,
                 "description": "과매수 기준점",
                 "min": 50.0,
                 "max": 90.0
@@ -32,7 +33,7 @@ class RSIStrategy(BaseStrategy):
             {
                 "name": "oversold",
                 "type": "float",
-                "default": 35.0,
+                "default": 30.0,
                 "description": "과매도 기준점",
                 "min": 10.0,
                 "max": 50.0
@@ -40,7 +41,7 @@ class RSIStrategy(BaseStrategy):
             {
                 "name": "exit_overbought",
                 "type": "float",
-                "default": 55.0,
+                "default": 50.0,
                 "description": "매도 포지션 종료 기준점",
                 "min": 40.0,
                 "max": 60.0
@@ -48,22 +49,22 @@ class RSIStrategy(BaseStrategy):
             {
                 "name": "exit_oversold",
                 "type": "float",
-                "default": 45.0,
+                "default": 50.0,
                 "description": "매수 포지션 종료 기준점",
                 "min": 40.0,
                 "max": 60.0
             }
         ]
     
-    def __init__(self, window: int = 14, overbought: float = 65.0, oversold: float = 35.0, 
-                 exit_overbought: float = 55.0, exit_oversold: float = 45.0):
+    def __init__(self, window: int = 14, overbought: float = 70.0, oversold: float = 30.0, 
+                 exit_overbought: float = 50.0, exit_oversold: float = 50.0):
         """
         Parameters:
             window (int): RSI 계산을 위한 기간
-            overbought (float): 과매수 기준점 (기본값: 65)
-            oversold (float): 과매도 기준점 (기본값: 35)
-            exit_overbought (float): 매도 포지션 종료 기준점 (기본값: 55)
-            exit_oversold (float): 매수 포지션 종료 기준점 (기본값: 45)
+            overbought (float): 과매수 기준점 (기본값: 70)
+            oversold (float): 과매도 기준점 (기본값: 30)
+            exit_overbought (float): 매도 포지션 종료 기준점 (기본값: 50)
+            exit_oversold (float): 매수 포지션 종료 기준점 (기본값: 50)
         """
         self._window = window
         self._overbought = overbought
@@ -88,17 +89,8 @@ class RSIStrategy(BaseStrategy):
         # 1. 데이터 유효성 검사
         df = self.validate_data(df).copy()
         
-        # 2. RSI 계산
-        delta = df['close'].diff()
-        gain = delta.where(delta > 0, 0)
-        loss = -delta.where(delta < 0, 0)
-        
-        # 지수이동평균 사용 (SMA보다 더 반응이 빠름)
-        avg_gain = gain.ewm(com=self._window-1, min_periods=self._window).mean()
-        avg_loss = loss.ewm(com=self._window-1, min_periods=self._window).mean()
-        
-        rs = avg_gain / avg_loss
-        df['rsi'] = 100 - (100 / (1 + rs))
+        # 2. RSI 계산 - indicators 모듈 사용
+        df['rsi'] = rsi(df['close'], window=self._window)
         
         # 3. 신호 초기화
         df['signal'] = 0

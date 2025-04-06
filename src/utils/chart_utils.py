@@ -1,15 +1,14 @@
 """
-시각화 유틸리티 모듈
+차트 유틸리티 모듈
 
-차트 시각화에 사용되는 다양한 유틸리티 함수를 제공합니다.
+시각화에 사용되는 공통 유틸리티 함수를 제공합니다.
 """
 import os
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from matplotlib.figure import Figure
 from datetime import datetime
 import pandas as pd
-from typing import Tuple, List, Optional, Dict, Any
+from typing import Tuple, List, Optional, Dict, Any, Union
 
 from src.utils.file_utils import ensure_directory
 from src.utils.config import CHART_SAVE_PATH
@@ -27,39 +26,65 @@ def setup_chart_dir(chart_dir: str = CHART_SAVE_PATH) -> str:
     # 디렉토리 생성 및 경로 반환
     return ensure_directory(chart_dir)
 
-def format_date_axis(ax):
+def format_date_axis(ax, rotate_labels: bool = False, hide_labels: bool = False, date_format: str = '%m/%d'):
     """
-    날짜 축 포맷 설정
+    날짜 축 포맷 설정 (개선된 버전)
     
     Parameters:
         ax: matplotlib 축 객체
+        rotate_labels (bool): 라벨을 회전할지 여부 (기본값: False - 회전 안 함)
+        hide_labels (bool): 라벨을 숨길지 여부
+        date_format (str): 날짜 표시 형식
     """
-    # 날짜 포맷터 설정 - 연도 없이 월-일만 표시
-    ax.xaxis.set_major_formatter(mdates.DateFormatter('%m-%d'))
+    # 날짜 포맷터 설정
+    ax.xaxis.set_major_formatter(mdates.DateFormatter(date_format))
     
-    # 날짜 라벨 간격 설정 - 데이터 수에 따라 적응적으로 조절
-    x_ticks = ax.get_xticks()
-    if len(x_ticks) > 10:
-        # 데이터가 많으면 로케이터를 조정하여 라벨 수 줄이기
-        ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, len(x_ticks) // 6)))
+    # 데이터에 따라 로케이터 설정
+    if len(ax.get_xticks()) > 0:
+        data_range = ax.get_xlim()[1] - ax.get_xlim()[0]
+        if data_range > 180:  # 6개월 이상
+            ax.xaxis.set_major_locator(mdates.MonthLocator())
+        elif data_range > 60:  # 2개월 이상
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=15))  # 15일 간격
+        elif data_range > 30:  # 1개월 이상
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=7))  # 1주 간격
+        else:
+            ax.xaxis.set_major_locator(mdates.DayLocator(interval=max(1, int(data_range // 10))))
+    
+    # 라벨 회전 설정
+    if rotate_labels:
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=45, ha='right')
+    else:
+        plt.setp(ax.xaxis.get_majorticklabels(), rotation=0, ha='center')
+    
+    # 라벨 숨김 처리
+    if hide_labels:
+        plt.setp(ax.get_xticklabels(), visible=False)
     
     # 그리드 설정
-    ax.grid(True, alpha=0.3)
+    ax.grid(True, alpha=0.2)  # 그리드 투명도 감소
 
-def format_price_axis(ax):
+def format_price_axis(ax, currency_symbol: str = "KRW"):
     """
     가격 축 포맷 설정
     
     Parameters:
         ax: matplotlib 축 객체
+        currency_symbol: 통화 기호
     """
     # 천 단위 콤마 포맷터 설정
-    ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, loc: "{:,}".format(int(x))))
+    if currency_symbol:
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(
+            lambda x, loc: "{:,.0f} {}".format(x, currency_symbol) if x >= 1000000 
+            else "{:,.0f}".format(x)))
+    else:
+        ax.yaxis.set_major_formatter(plt.FuncFormatter(
+            lambda x, loc: "{:,.0f}".format(x)))
     
     # 그리드 설정
     ax.grid(True, alpha=0.3)
 
-def save_chart(fig, file_name, chart_dir=CHART_SAVE_PATH, dpi=300) -> str:
+def save_chart(fig, file_name, chart_dir=CHART_SAVE_PATH, dpi=150) -> str:
     """
     차트 저장
     
@@ -78,13 +103,15 @@ def save_chart(fig, file_name, chart_dir=CHART_SAVE_PATH, dpi=300) -> str:
     # 파일 전체 경로
     full_path = os.path.join(chart_path, file_name)
     
-    # 그림 저장 - bbox_inches='tight' 제거하여 그래프 잘림 방지
-    fig.savefig(full_path, dpi=dpi)
+    # 그림 저장
+    fig.savefig(full_path, dpi=dpi, bbox_inches='tight')
     plt.close(fig)
     
     return full_path
 
-def generate_filename(ticker: str, interval: str = "day", period: str = "1m", suffix: str = "", strategy: str = "", initial_capital: float = None, **kwargs) -> str:
+def generate_filename(ticker: str, interval: str = "day", period: str = "1m", 
+                     suffix: str = "", strategy: str = "", 
+                     initial_capital: float = None, **kwargs) -> str:
     """
     차트 파일명 생성
     
@@ -112,18 +139,10 @@ def generate_filename(ticker: str, interval: str = "day", period: str = "1m", su
     # 초기 자본금이 있으면 추가 (단위: 만원)
     capital_str = f"_{int(initial_capital/10000)}만원" if initial_capital else ""
     
-    # 파일명 생성
+    # 파일명 생성 - period 값을 그대로 사용
     filename = f"{ticker}_{interval}_{period}{strategy_str}{capital_str}{suffix}_{timestamp}.png"
     
     return filename
-
-def apply_mpl_styles():
-    """기본 matplotlib 스타일 적용"""
-    # Matplotlib 스타일 설정
-    plt.style.use('seaborn-darkgrid')
-    
-    # 한글 폰트 문제 해결 (필요한 경우)
-    plt.rcParams['axes.unicode_minus'] = False
 
 def detect_chart_type(df: pd.DataFrame) -> str:
     """
@@ -141,13 +160,17 @@ def detect_chart_type(df: pd.DataFrame) -> str:
         'line': ['Close']
     }
     
-    # 캔들스틱 또는 OHLC 차트 필요 컬럼 확인
+    # 대문자 컬럼명 확인
     if all(col in df.columns for col in required_cols['candlestick']):
-        # 가장 좋은 데이터가 있으면 캔들스틱 반환
         return 'candlestick'
+    
+    # 소문자 컬럼명 확인
+    if all(col.lower() in [c.lower() for c in df.columns] for col in required_cols['candlestick']):
+        return 'candlestick'
+    
     # 종가만 있으면 라인 차트
-    elif 'Close' in df.columns:
+    if 'Close' in df.columns or 'close' in df.columns:
         return 'line'
+    
     # 기본값
-    else:
-        return 'line'
+    return 'line' 

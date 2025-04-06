@@ -161,4 +161,39 @@ class StochasticStrategy(BaseStrategy):
             "slowing": self._slowing,
             "overbought": self._overbought,
             "oversold": self._oversold
-        } 
+        }
+        
+    def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        백테스팅 엔진용 시그널 생성 함수
+        
+        Parameters:
+            df (pd.DataFrame): OHLCV 데이터
+            
+        Returns:
+            pd.DataFrame: 시그널이 추가된 데이터프레임
+        """
+        # 신호가 있는 행들만 추출
+        signals_df = pd.DataFrame(index=df.index)
+        
+        # 매수 신호
+        buy_signals = df[df['signal'] == 1].index
+        if len(buy_signals) > 0:
+            buy_df = pd.DataFrame({
+                'type': 'buy',
+                'price': df.loc[buy_signals, 'close'],
+                'signal': 1
+            }, index=buy_signals)
+            signals_df = pd.concat([signals_df, buy_df])
+        
+        # 매도 신호
+        sell_signals = df[df['signal'] == -1].index
+        if len(sell_signals) > 0:
+            sell_df = pd.DataFrame({
+                'type': 'sell',
+                'price': df.loc[sell_signals, 'close'],
+                'signal': -1
+            }, index=sell_signals)
+            signals_df = pd.concat([signals_df, sell_df])
+        
+        return signals_df 

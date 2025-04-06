@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any
 from .base_strategy import BaseStrategy
+from src.indicators.momentum import macd
 
 class MACDStrategy(BaseStrategy):
     """MACD(이동평균수렴확산지수) 전략 구현"""
@@ -17,7 +18,7 @@ class MACDStrategy(BaseStrategy):
                 "name": "short_window",
                 "type": "int",
                 "default": 12,
-                "description": "단기 EMA 기간",
+                "description": "단기 이동평균 기간",
                 "min": 2,
                 "max": 50
             },
@@ -25,22 +26,22 @@ class MACDStrategy(BaseStrategy):
                 "name": "long_window",
                 "type": "int",
                 "default": 26,
-                "description": "장기 EMA 기간",
-                "min": 5,
+                "description": "장기 이동평균 기간",
+                "min": 3,
                 "max": 100
             },
             {
                 "name": "signal_window",
                 "type": "int",
                 "default": 9,
-                "description": "시그널 EMA 기간",
+                "description": "신호선 기간",
                 "min": 2,
-                "max": 30
+                "max": 50
             },
             {
                 "name": "min_crossover_threshold",
                 "type": "float",
-                "default": 0.05,
+                "default": 0.02,
                 "description": "최소 크로스오버 임계값",
                 "min": 0.0,
                 "max": 0.5
@@ -48,22 +49,22 @@ class MACDStrategy(BaseStrategy):
             {
                 "name": "min_holding_period",
                 "type": "int",
-                "default": 3,
+                "default": 2,
                 "description": "최소 포지션 유지 기간",
                 "min": 0,
-                "max": 20
+                "max": 30
             }
         ]
     
     def __init__(self, short_window: int = 12, long_window: int = 26, signal_window: int = 9, 
-                 min_crossover_threshold: float = 0.0, min_holding_period: int = 0):
+                 min_crossover_threshold: float = 0.02, min_holding_period: int = 2):
         """
         Parameters:
-            short_window (int): 단기 EMA 기간
-            long_window (int): 장기 EMA 기간
-            signal_window (int): 시그널 EMA 기간
-            min_crossover_threshold (float): 최소 크로스오버 임계값 (0 이상일 때만 신호 발생)
-            min_holding_period (int): 최소 포지션 유지 기간 (거래 빈도 감소)
+            short_window (int): 단기 이동평균 기간 (기본값: 12)
+            long_window (int): 장기 이동평균 기간 (기본값: 26)
+            signal_window (int): 신호선 기간 (기본값: 9)
+            min_crossover_threshold (float): 최소 크로스오버 임계값 (기본값: 0.02)
+            min_holding_period (int): 최소 포지션 유지 기간 (기본값: 2)
         """
         self._short_window = short_window
         self._long_window = long_window
@@ -88,17 +89,20 @@ class MACDStrategy(BaseStrategy):
         # 1. 데이터 유효성 검사
         df = self.validate_data(df).copy()
         
-        # 2. MACD 계산
+        # 2. MACD 계산 - indicators 모듈 사용
+        df['macd'], df['signal_line'], df['histogram'] = macd(
+            df['close'], 
+            fast_period=self._short_window, 
+            slow_period=self._long_window, 
+            signal_period=self._signal_window
+        )
+        
+        # 2.1 legacy 호환을 위한 추가 (필요 시)
         df['short_ema'] = df['close'].ewm(span=self._short_window, adjust=False).mean()
         df['long_ema'] = df['close'].ewm(span=self._long_window, adjust=False).mean()
-        df['macd'] = df['short_ema'] - df['long_ema']
-        df['signal_line'] = df['macd'].ewm(span=self._signal_window, adjust=False).mean()
-        df['histogram'] = df['macd'] - df['signal_line']
         
         # 3. 유효한 데이터 확인
         valid_idx = (
-            df['short_ema'].notna() & 
-            df['long_ema'].notna() & 
             df['macd'].notna() & 
             df['signal_line'].notna() & 
             df['histogram'].notna()
