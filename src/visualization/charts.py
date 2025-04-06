@@ -587,7 +587,8 @@ def plot_backtest_results(
     # 파일 이름 생성 및 저장
     period = results.get('period')  # 결과에서 period 정보 가져오기 시도
     initial_capital = results.get('initial_capital')  # 초기 투자금액 정보
+    interval = results.get('interval')  # 결과에서 interval 정보 가져오기
     
     file_name = generate_filename(ticker=ticker, strategy=strategy, period=period, 
-                                  initial_capital=initial_capital, prefix='backtest')
+                                  initial_capital=initial_capital, interval=interval, prefix='backtest')
     return save_chart(fig, file_name, chart_dir, style_config['dpi'])

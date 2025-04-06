@@ -47,7 +47,12 @@ class BaseStrategy(ABC):
         # 데이터 충분성 검사
         min_required_rows = self.get_min_required_rows()
         if len(df) < min_required_rows:
-            raise ValueError(f"전략 적용에 최소 {min_required_rows}개 행이 필요합니다. 현재: {len(df)}")
+            # raise ValueError(f"전략 적용에 최소 {min_required_rows}개 행이 필요합니다. 현재: {len(df)}")
+            print(f"\n⚠️ 경고: 전략 적용에 최소 {min_required_rows}개 행이 필요합니다. 현재: {len(df)}")
+            print("다음 옵션을 시도해보세요:")
+            print(f"  1. 더 긴 기간 사용: -p 3m 또는 -p 6m")
+            print(f"  2. 더 짧은 시간 간격 사용: -v minute60 또는 -v minute30")
+            print(f"  3. 더 많은 데이터가 필요한 전략이므로 다른 전략을 시도")
         return df
     
     def get_min_required_rows(self) -> int:

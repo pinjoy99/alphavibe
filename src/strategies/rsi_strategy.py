@@ -6,6 +6,55 @@ from .base_strategy import BaseStrategy
 class RSIStrategy(BaseStrategy):
     """RSI(상대강도지수) 전략 구현"""
     
+    STRATEGY_CODE = "rsi"
+    STRATEGY_NAME = "RSI 전략"
+    STRATEGY_DESCRIPTION = "14일 기준 RSI 지표로 과매수(70)/과매도(30) 상태를 활용, 과매도 상태에서 반등 시 매수, 과매수 상태에서 하락 시 매도"
+    
+    @classmethod
+    def register_strategy_params(cls):
+        return [
+            {
+                "name": "window",
+                "type": "int",
+                "default": 14,
+                "description": "RSI 계산 기간",
+                "min": 2,
+                "max": 50
+            },
+            {
+                "name": "overbought",
+                "type": "float",
+                "default": 65.0,
+                "description": "과매수 기준점",
+                "min": 50.0,
+                "max": 90.0
+            },
+            {
+                "name": "oversold",
+                "type": "float",
+                "default": 35.0,
+                "description": "과매도 기준점",
+                "min": 10.0,
+                "max": 50.0
+            },
+            {
+                "name": "exit_overbought",
+                "type": "float",
+                "default": 55.0,
+                "description": "매도 포지션 종료 기준점",
+                "min": 40.0,
+                "max": 60.0
+            },
+            {
+                "name": "exit_oversold",
+                "type": "float",
+                "default": 45.0,
+                "description": "매수 포지션 종료 기준점",
+                "min": 40.0,
+                "max": 60.0
+            }
+        ]
+    
     def __init__(self, window: int = 14, overbought: float = 65.0, oversold: float = 35.0, 
                  exit_overbought: float = 55.0, exit_oversold: float = 45.0):
         """
@@ -111,7 +160,7 @@ class RSIStrategy(BaseStrategy):
     @property
     def name(self) -> str:
         """전략 이름"""
-        return "RSI"
+        return self.STRATEGY_NAME
     
     @property
     def params(self) -> Dict[str, Any]:

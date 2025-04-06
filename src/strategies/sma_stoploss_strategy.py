@@ -9,6 +9,47 @@ class SMAStopLossStrategy(SMAStrategy):
     SMA 전략에 익절(Take Profit)과 손절(Stop Loss)을 추가한 전략
     """
     
+    STRATEGY_CODE = "sma_stoploss"
+    STRATEGY_NAME = "SMA+손익절 전략"
+    STRATEGY_DESCRIPTION = "기본 SMA 전략에 익절(10%) 및 손절(-3%) 규칙 추가, 수익이 10%에 도달하면 익절하고, 손실이 -3%에 도달하면 손절"
+    
+    @classmethod
+    def register_strategy_params(cls):
+        return [
+            {
+                "name": "short_window",
+                "type": "int",
+                "default": 10,
+                "description": "단기 이동평균선 기간",
+                "min": 2,
+                "max": 50
+            },
+            {
+                "name": "long_window",
+                "type": "int",
+                "default": 30,
+                "description": "장기 이동평균선 기간",
+                "min": 5,
+                "max": 200
+            },
+            {
+                "name": "take_profit",
+                "type": "float",
+                "default": 0.10,
+                "description": "익절 기준점 (%)",
+                "min": 0.01,
+                "max": 0.50
+            },
+            {
+                "name": "stop_loss",
+                "type": "float",
+                "default": 0.03,
+                "description": "손절 기준점 (%)",
+                "min": 0.01,
+                "max": 0.20
+            }
+        ]
+    
     def __init__(self, short_window: int = 10, long_window: int = 30, 
                  take_profit: float = 0.10, stop_loss: float = 0.03):
         """

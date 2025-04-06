@@ -6,6 +6,55 @@ from .base_strategy import BaseStrategy
 class MACDStrategy(BaseStrategy):
     """MACD(이동평균수렴확산지수) 전략 구현"""
     
+    STRATEGY_CODE = "macd"
+    STRATEGY_NAME = "MACD 전략"
+    STRATEGY_DESCRIPTION = "단기(12일)와 장기(26일) 지수이동평균의 차이와 신호선(9일)을 활용, MACD선이 신호선을 상향 돌파 시 매수, 하향 돌파 시 매도"
+    
+    @classmethod
+    def register_strategy_params(cls):
+        return [
+            {
+                "name": "short_window",
+                "type": "int",
+                "default": 12,
+                "description": "단기 EMA 기간",
+                "min": 2,
+                "max": 50
+            },
+            {
+                "name": "long_window",
+                "type": "int",
+                "default": 26,
+                "description": "장기 EMA 기간",
+                "min": 5,
+                "max": 100
+            },
+            {
+                "name": "signal_window",
+                "type": "int",
+                "default": 9,
+                "description": "시그널 EMA 기간",
+                "min": 2,
+                "max": 30
+            },
+            {
+                "name": "min_crossover_threshold",
+                "type": "float",
+                "default": 0.05,
+                "description": "최소 크로스오버 임계값",
+                "min": 0.0,
+                "max": 0.5
+            },
+            {
+                "name": "min_holding_period",
+                "type": "int",
+                "default": 3,
+                "description": "최소 포지션 유지 기간",
+                "min": 0,
+                "max": 20
+            }
+        ]
+    
     def __init__(self, short_window: int = 12, long_window: int = 26, signal_window: int = 9, 
                  min_crossover_threshold: float = 0.0, min_holding_period: int = 0):
         """
@@ -111,7 +160,7 @@ class MACDStrategy(BaseStrategy):
     @property
     def name(self) -> str:
         """전략 이름"""
-        return "MACD"
+        return self.STRATEGY_NAME
     
     @property
     def params(self) -> Dict[str, Any]:

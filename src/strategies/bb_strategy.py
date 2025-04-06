@@ -5,6 +5,31 @@ from .base_strategy import BaseStrategy
 class BollingerBandsStrategy(BaseStrategy):
     """볼린저 밴드 전략 구현"""
     
+    STRATEGY_CODE = "bb"
+    STRATEGY_NAME = "볼린저 밴드 전략"
+    STRATEGY_DESCRIPTION = "20일 이동평균선을 중심으로 표준편차(2.0)에 따른 밴드를 활용, 하단 밴드 터치 시 매수, 상단 밴드 터치 시 매도"
+    
+    @classmethod
+    def register_strategy_params(cls):
+        return [
+            {
+                "name": "window",
+                "type": "int",
+                "default": 20,
+                "description": "이동평균선 기간",
+                "min": 5,
+                "max": 100
+            },
+            {
+                "name": "std_dev",
+                "type": "float",
+                "default": 2.0,
+                "description": "표준편차 배수",
+                "min": 0.5,
+                "max": 4.0
+            }
+        ]
+    
     def __init__(self, window: int = 20, std_dev: float = 2.0):
         """
         Parameters:
@@ -58,7 +83,7 @@ class BollingerBandsStrategy(BaseStrategy):
     @property
     def name(self) -> str:
         """전략 이름"""
-        return "BB"
+        return self.STRATEGY_NAME
     
     @property
     def params(self) -> Dict[str, Any]:

@@ -51,7 +51,6 @@ def parse_args():
     # 사용 가능한 전략 목록 동적 생성
     StrategyRegistry.discover_strategies()
     available_strategies = [strategy['code'] for strategy in StrategyRegistry.get_available_strategies()]
-    available_strategies.extend(["sma", "bb", "macd", "rsi"])  # 레거시 전략 추가
     available_strategies = sorted(list(set(available_strategies)))  # 중복 제거 및 정렬
     
     parser.add_argument("--strategy", "-s", choices=available_strategies, default="sma", 
@@ -108,8 +107,6 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
     df = get_backtest_data(ticker, period, interval)
     
     if df is not None and not df.empty:
-        # 전략 파라미터 설정
-        strategy_params = {}
         # 레지스트리에서 전략 정보 가져오기
         strategy_info = None
         for s in StrategyRegistry.get_available_strategies():
@@ -117,108 +114,85 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                 strategy_info = s
                 break
         
-        # 레지스트리에 등록된 전략이면 기본 파라미터 사용
+        # 전략 파라미터 설정 - 레지스트리 정보 사용
+        strategy_params = {}
         if strategy_info:
             strategy_params = {p['name']: p['default'] for p in strategy_info['params']}
-        else:
-            # 레거시 전략 파라미터 설정 (기존 코드 유지)
-            if strategy == "sma":
-                # SMA 파라미터 최적화 - 더 긴 이동평균선 기간 사용
-                strategy_params = {
-                    "short_window": 10,  # 이전: 5
-                    "long_window": 30    # 이전: 20
-                }
-            elif strategy == "bb":
-                # 볼린저 밴드 파라미터
-                strategy_params = {
-                    "window": 20,
-                    "std_dev": 2.0
-                }
-            elif strategy == "macd":
-                # MACD 파라미터
-                strategy_params = {
-                    "short_window": 12,
-                    "long_window": 26,
-                    "signal_window": 9,
-                    "min_crossover_threshold": 0.05,  # 최소 크로스오버 임계값 (5%)
-                    "min_holding_period": 3           # 최소 3일 유지 (거래 횟수 감소)
-                }
-            elif strategy == "rsi":
-                # RSI 파라미터
-                strategy_params = {
-                    "window": 14,
-                    "overbought": 65,
-                    "oversold": 35,
-                    "exit_overbought": 55,
-                    "exit_oversold": 45
-                }
-            elif strategy == "sma_stoploss":
-                # SMA+손익절 전략 파라미터
-                strategy_params = {
-                    "short_window": 10,
-                    "long_window": 30,
-                    "take_profit": 0.10,  # 10% 익절
-                    "stop_loss": 0.03     # 3% 손절
-                }
         
         # 전략 객체 생성 및 적용
         strategy_obj = create_strategy(strategy, **strategy_params)
         if strategy_obj:
-            # 전략 적용
-            df = strategy_obj.apply(df)
-            
-            # 백테스팅 실행
-            results = backtest_strategy(df, initial_capital)
-            
-            # 결과에 전략 정보 추가
-            results['strategy'] = strategy_obj.name
-            results['strategy_params'] = strategy_obj.params
-            results['period'] = period  # 기간 정보 추가
-            
-            # 결과 출력
-            print("\n백테스팅 결과:")
-            print(f"전략: {strategy_obj.name}")
-            print(f"기간: {results['start_date']} ~ {results['end_date']} ({results['total_days']}일)")
-            print(f"초기 자본금: {results['initial_capital']:,.0f} KRW")
-            print(f"최종 자본금: {results['final_capital']:,.0f} KRW")
-            print(f"총 수익률: {results['total_return_pct']:.2f}%")
-            print(f"연간 수익률: {results['annual_return_pct']:.2f}%")
-            print(f"최대 낙폭: {results['max_drawdown_pct']:.2f}%")
-            print(f"거래 횟수: {results['trade_count']}")
-            
-            # 거래 내역 세부 정보 출력 (선택적)
-            print_detailed_trades = True  # 상세 거래 내역 출력 여부
-            if print_detailed_trades and results['trade_history']:
-                print("\n주요 거래 내역:")
-                for i, trade in enumerate(results['trade_history']):
-                    if i >= 5:  # 최대 5개만 출력
-                        print(f"... 총 {len(results['trade_history'])}개 거래 중 일부만 표시")
-                        break
-                    
-                    trade_type = "매수" if trade['type'] == 'buy' else "매도"
-                    position_change = trade.get('position_change', 0)
-                    position_str = f"포지션 변화: {position_change*100:.1f}%" if position_change else ""
-                    
-                    print(f"{trade['date'].strftime('%Y-%m-%d')} | {trade_type} | " +
-                          f"가격: {trade['price']:,.0f} KRW | " +
-                          f"수량: {trade.get('amount', 0):.8f} | {position_str}")
-            
-            # 그래프 생성 전 unicode minus 설정 다시 적용
-            matplotlib.rcParams['axes.unicode_minus'] = False
-            
-            # 백테스팅 결과 시각화
-            chart_path = plot_backtest_results(ticker, results)
-            
-            # 텔레그램 알림
-            if enable_telegram:
-                # 결과 메시지 작성
-                params_str = ", ".join([f"{k}={v}" for k, v in strategy_obj.params.items()])
+            try:
+                # 전략 적용
+                df = strategy_obj.apply(df)
                 
-                # 메시지 생성과 전송을 분리된 모듈 함수 사용
-                result_message = get_telegram_backtest_message(ticker, strategy_obj.name, params_str, results)
+                # 백테스팅 결과가 의미 있는지 확인
+                signal_count = (df['signal'] != 0).sum()
+                if signal_count == 0:
+                    print("\n⚠️ 경고: 선택한 기간과 간격에서 거래 신호가 생성되지 않았습니다.")
+                    print("다음 옵션을 시도해보세요:")
+                    print(f"  1. 더 긴 기간 사용: -p 3m 또는 -p 6m")
+                    print(f"  2. 다른 시간 간격 사용: -v minute60 또는 -v day")
+                    print(f"  3. 현재 시장 조건에 더 적합한 다른 전략 시도")
                 
-                # 차트 전송
-                await send_telegram_chart(chart_path, result_message, enable_telegram, bot)
+                # 백테스팅 실행
+                results = backtest_strategy(df, initial_capital)
+                
+                # 결과에 전략 정보 추가
+                results['strategy'] = strategy_obj.name
+                results['strategy_params'] = strategy_obj.params
+                results['period'] = period  # 기간 정보 추가
+                results['interval'] = interval  # 데이터 간격 정보 추가
+                
+                # 결과 출력
+                print("\n백테스팅 결과:")
+                print(f"전략: {strategy_obj.name}")
+                print(f"기간: {results['start_date']} ~ {results['end_date']} ({results['total_days']}일)")
+                print(f"초기 자본금: {results['initial_capital']:,.0f} KRW")
+                print(f"최종 자본금: {results['final_capital']:,.0f} KRW")
+                print(f"총 수익률: {results['total_return_pct']:.2f}%")
+                print(f"연간 수익률: {results['annual_return_pct']:.2f}%")
+                print(f"최대 낙폭: {results['max_drawdown_pct']:.2f}%")
+                print(f"거래 횟수: {results['trade_count']}")
+                
+                # 거래 내역 세부 정보 출력 (선택적)
+                print_detailed_trades = True  # 상세 거래 내역 출력 여부
+                if print_detailed_trades and results['trade_history']:
+                    print("\n주요 거래 내역:")
+                    for i, trade in enumerate(results['trade_history']):
+                        if i >= 5:  # 최대 5개만 출력
+                            print(f"... 총 {len(results['trade_history'])}개 거래 중 일부만 표시")
+                            break
+                        
+                        trade_type = "매수" if trade['type'] == 'buy' else "매도"
+                        position_change = trade.get('position_change', 0)
+                        position_str = f"포지션 변화: {position_change*100:.1f}%" if position_change else ""
+                        
+                        print(f"{trade['date'].strftime('%Y-%m-%d')} | {trade_type} | " +
+                              f"가격: {trade['price']:,.0f} KRW | " +
+                              f"수량: {trade.get('amount', 0):.8f} | {position_str}")
+                
+                # 그래프 생성 전 unicode minus 설정 다시 적용
+                matplotlib.rcParams['axes.unicode_minus'] = False
+                
+                # 백테스팅 결과 시각화
+                chart_path = plot_backtest_results(ticker, results)
+                
+                # 텔레그램 알림
+                if enable_telegram:
+                    # 결과 메시지 작성
+                    params_str = ", ".join([f"{k}={v}" for k, v in strategy_obj.params.items()])
+                    
+                    # 메시지 생성과 전송을 분리된 모듈 함수 사용
+                    result_message = get_telegram_backtest_message(ticker, strategy_obj.name, params_str, results)
+                    
+                    # 차트 전송
+                    await send_telegram_chart(chart_path, result_message, enable_telegram, bot)
+            except Exception as e:
+                error_message = f"백테스팅 중 오류 발생: {e}"
+                print(f"\n❌ {error_message}")
+                if enable_telegram:
+                    await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
         else:
             error_message = f"유효하지 않은 전략: {strategy}"
             print(error_message)
