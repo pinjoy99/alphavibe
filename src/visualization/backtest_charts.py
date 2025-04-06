@@ -309,14 +309,42 @@ def plot_backtest_results(
                 # 자산 가치 그리기
                 if asset_history:
                     asset_series = pd.Series(asset_history, index=df.index[:len(asset_history)])
+                    
+                    # 전략 포트폴리오 그래프
                     ax.plot(
                         asset_series.index, 
                         asset_series, 
                         color=style_config['colors']['portfolio'], 
-                        linewidth=1.5
+                        linewidth=1.5,
+                        label=f'{strategy_name} 전략'
                     )
+                    
+                    # Buy and Hold 전략 계산 및 그래프 추가
+                    if len(df) > 0:
+                        # Buy and Hold 계산: 초기에 모든 자본으로 코인 구매
+                        initial_capital = asset_series.iloc[0] if not asset_series.empty else cash_history[0]
+                        initial_price = df['close'].iloc[0]
+                        coin_amount_bh = initial_capital / initial_price  # 초기 코인 수량
+                        
+                        # Buy and Hold 자산 가치 계산
+                        bh_asset_values = df['close'] * coin_amount_bh
+                        
+                        # Buy and Hold 그래프 추가
+                        ax.plot(
+                            df.index[:len(asset_series)], 
+                            bh_asset_values[:len(asset_series)], 
+                            color='gray', 
+                            linewidth=1.5, 
+                            linestyle='--',
+                            label='Buy & Hold'
+                        )
+                    
                     ax.set_ylabel('포트폴리오 가치', fontsize=style_config.get('fontsize', {}).get('label', 10), color=style_config['colors'].get('text', 'white'))
                     ax.grid(True, alpha=style_config.get('grid', {}).get('alpha', 0.3))
+                    
+                    # 범례 추가
+                    ax.legend(loc='upper left', fontsize=style_config.get('fontsize', {}).get('legend', 8))
+                    
                     print("포트폴리오 차트 그리기 완료")
                 else:
                     print("경고: 자산 가치 데이터가 없습니다.")
