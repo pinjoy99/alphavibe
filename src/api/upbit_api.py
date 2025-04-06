@@ -46,12 +46,18 @@ def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") 
     from_date = parse_period_to_datetime(period_str)
     to_date = datetime.now()
     
+    # interval 형식 변환 (1h -> minute60와 같은 변환)
+    if interval == "1h":
+        interval = "minute60"
+    elif interval == "4h":
+        interval = "minute240"
+    
     # 사용자가 지정한 interval을 우선 사용
     user_interval = interval
     
-    # 기간에 따라 적절한 간격 자동 선택 (사용자가 지정한 interval이 없을 경우)
+    # 기간에 따라 자동으로 간격 선택 (사용자가 명시적으로 interval을 지정하지 않은 경우에만)
     match = re.match(r'(\d+)([dwmy])', period_str)
-    if match and user_interval == "minute60":  # 사용자가 기본값을 사용한 경우에만 자동 조정
+    if match and user_interval == "minute60" and user_interval == interval:  # 사용자가 기본값을 사용한 경우에만 자동 조정
         value, unit = int(match.group(1)), match.group(2)
         
         # 6개월 이상인 경우 일봉 데이터 사용
