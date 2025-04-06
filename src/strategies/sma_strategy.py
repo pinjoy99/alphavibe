@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 from typing import Dict, Any, List, ClassVar
 from .base_strategy import BaseStrategy
 from src.indicators.moving_averages import sma, calculate_moving_averages
@@ -107,36 +108,23 @@ class SMAStrategy(BaseStrategy):
         
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        백테스팅 엔진을 위한 매수/매도 신호 생성
+        백테스팅을 위한 거래 신호 생성
         
         Parameters:
-            df (pd.DataFrame): 신호가 추가된 데이터프레임
+            df (pd.DataFrame): 이미 apply() 메서드로 지표가 계산된 데이터프레임
             
         Returns:
-            pd.DataFrame: 매수/매도 신호 데이터프레임
+            pd.DataFrame: 거래 신호가 있는 데이터프레임
         """
-        # apply 메서드를 통해 신호 생성
-        if 'signal' not in df.columns:
-            df = self.apply(df)
-            
-        # 신호 변화 지점만 추출
-        signals = pd.DataFrame(index=df.index)
-        signals['price'] = df['close']
+        # 신호가 포함된 행만 필터링
+        # position 값은 signal의 변화를 나타냄: 1(매수 진입), -1(매도 진입), 0(유지)
+        signal_df = df[df['position'] != 0].copy()
         
-        # 매수/매도 신호 추출
-        buy_signals = df[df['position'] > 0].index
-        sell_signals = df[df['position'] < 0].index
+        # 결과 데이터프레임 준비
+        result_df = pd.DataFrame(index=signal_df.index)
         
-        # 신호 데이터프레임 구성
-        buys = pd.DataFrame(index=buy_signals)
-        buys['type'] = 'buy'
-        buys['price'] = df.loc[buy_signals, 'close']
-        buys['ratio'] = 1.0  # 전액 매수
+        # 매수/매도 신호 설정
+        result_df['type'] = np.where(signal_df['position'] > 0, 'buy', 'sell')
+        result_df['ratio'] = 1.0  # 100% 투자/청산
         
-        sells = pd.DataFrame(index=sell_signals)
-        sells['type'] = 'sell'
-        sells['price'] = df.loc[sell_signals, 'close']
-        sells['ratio'] = 1.0  # 전액 매도
-        
-        # 매수/매도 신호 결합
-        return pd.concat([buys, sells]).sort_index() 
+        return result_df 

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any, List, ClassVar
 from .base_strategy import BaseStrategy
+from src.indicators.momentum import stochastic
 
 class StochasticStrategy(BaseStrategy):
     """
@@ -165,35 +166,23 @@ class StochasticStrategy(BaseStrategy):
         
     def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
         """
-        백테스팅 엔진용 시그널 생성 함수
+        백테스팅을 위한 거래 신호 생성
         
         Parameters:
-            df (pd.DataFrame): OHLCV 데이터
+            df (pd.DataFrame): 이미 apply() 메서드로 지표가 계산된 데이터프레임
             
         Returns:
-            pd.DataFrame: 시그널이 추가된 데이터프레임
+            pd.DataFrame: 거래 신호가 있는 데이터프레임
         """
-        # 신호가 있는 행들만 추출
-        signals_df = pd.DataFrame(index=df.index)
+        # 신호가 포함된 행만 필터링
+        # position 값은 signal의 변화를 나타냄: 1(매수 진입), -1(매도 진입), 0(유지)
+        signal_df = df[df['position'] != 0].copy()
         
-        # 매수 신호
-        buy_signals = df[df['signal'] == 1].index
-        if len(buy_signals) > 0:
-            buy_df = pd.DataFrame({
-                'type': 'buy',
-                'price': df.loc[buy_signals, 'close'],
-                'signal': 1
-            }, index=buy_signals)
-            signals_df = pd.concat([signals_df, buy_df])
+        # 결과 데이터프레임 준비
+        result_df = pd.DataFrame(index=signal_df.index)
         
-        # 매도 신호
-        sell_signals = df[df['signal'] == -1].index
-        if len(sell_signals) > 0:
-            sell_df = pd.DataFrame({
-                'type': 'sell',
-                'price': df.loc[sell_signals, 'close'],
-                'signal': -1
-            }, index=sell_signals)
-            signals_df = pd.concat([signals_df, sell_df])
+        # 매수/매도 신호 설정
+        result_df['type'] = np.where(signal_df['position'] > 0, 'buy', 'sell')
+        result_df['ratio'] = 1.0  # 100% 투자/청산
         
-        return signals_df 
+        return result_df 

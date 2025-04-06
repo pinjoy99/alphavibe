@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from typing import Dict, Any
+from typing import Dict, Any, List, ClassVar, Optional
 from .base_strategy import BaseStrategy
 from .sma_strategy import SMAStrategy
 
@@ -122,6 +122,29 @@ class SMAStopLossStrategy(SMAStrategy):
                         entry_price = 0
         
         return df
+    
+    def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        백테스팅을 위한 거래 신호 생성
+        
+        Parameters:
+            df (pd.DataFrame): 이미 apply() 메서드로 지표가 계산된 데이터프레임
+            
+        Returns:
+            pd.DataFrame: 거래 신호가 있는 데이터프레임
+        """
+        # 신호가 포함된 행만 필터링
+        # position 값은 signal의 변화를 나타냄: 1(매수 진입), -1(매도 진입), 0(유지)
+        signal_df = df[df['position'] != 0].copy()
+        
+        # 결과 데이터프레임 준비
+        result_df = pd.DataFrame(index=signal_df.index)
+        
+        # 매수/매도 신호 설정
+        result_df['type'] = np.where(signal_df['position'] > 0, 'buy', 'sell')
+        result_df['ratio'] = 1.0  # 100% 투자/청산
+        
+        return result_df
     
     @property
     def name(self) -> str:

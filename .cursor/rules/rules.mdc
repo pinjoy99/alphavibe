@@ -3,10 +3,10 @@ description:
 globs: 
 alwaysApply: true
 ---
+### Project Rules
 
-# Project Rules
-
-- Perform end-to-end testing after every modification.
-- Update all relevant documentation with every change.
-- Write clear and concise git commit messages (preferably under 5 lines).
-- Push changes only after completing the above steps.
+1. When given the command **"study"**, prioritize reading `README.md` and documents under the `doc/` directory first, then study code in `src/` and the project root.
+2. Perform end-to-end testing after every modification.  
+3. Update all relevant documentation with every change.  
+4. Write clear and concise git commit messages (preferably under 5 lines).  
+5. Push changes only after completing the above steps.  

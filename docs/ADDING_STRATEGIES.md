@@ -80,6 +80,43 @@ def register_strategy_params(cls):
     ]
 ```
 
+### 백테스트 엔진을 위한 거래 신호 생성
+
+`generate_signals()` 메서드는 백테스트 엔진에서 사용되는 실제 거래 신호를 생성합니다:
+
+```python
+def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+    """
+    백테스팅을 위한 거래 신호 생성
+    
+    Parameters:
+        df (pd.DataFrame): 이미 apply() 메서드로 지표가 계산된 데이터프레임
+        
+    Returns:
+        pd.DataFrame: 거래 신호가 있는 데이터프레임
+    """
+    # 신호가 포함된 행만 필터링
+    # position 값은 signal의 변화를 나타냄: 1(매수 진입), -1(매도 진입), 0(유지)
+    signal_df = df[df['position'] != 0].copy()
+    
+    # 결과 데이터프레임 준비
+    result_df = pd.DataFrame(index=signal_df.index)
+    
+    # 매수/매도 신호 설정
+    result_df['type'] = np.where(signal_df['position'] > 0, 'buy', 'sell')
+    result_df['ratio'] = 1.0  # 100% 투자/청산
+    
+    return result_df
+```
+
+이 메서드는 다음과 같은 역할을 합니다:
+- `position != 0`인 행만 필터링하여 실제 거래가 발생하는 시점만 추출
+- 새로운 데이터프레임에 매수/매도 신호 타입과 비율을 설정
+- `type`은 'buy' 또는 'sell' 값을 가짐
+- `ratio`는 투자/청산 비율을 나타냄 (기본값: 1.0, 즉 100%)
+
+**중요**: 백테스트 엔진은 이 형식의 데이터프레임을 기대하므로, 모든 전략은 이 형식을 따라야 합니다. 기본 구현은 `BaseStrategy` 클래스에서 제공되므로 별도의 구현이 필요 없으나, 특별한 처리가 필요한 경우 오버라이드할 수 있습니다.
+
 ## 예제
 
 ### 1. 간단한 모멘텀 전략 예제

@@ -85,29 +85,59 @@ def plot_price_data(
     
     # 매수/매도 신호 표시
     if signals is not None and not signals.empty:
-        # 매수 신호
-        buy_signals = signals[signals['type'] == 'buy']
-        if not buy_signals.empty:
-            ax.scatter(
-                buy_signals.index, 
-                buy_signals['price'], 
-                color=style_config['colors'].get('buy_signal', '#4CD964'), 
-                marker='^', 
-                s=100, 
-                label='매수'
-            )
-        
-        # 매도 신호
-        sell_signals = signals[signals['type'] == 'sell']
-        if not sell_signals.empty:
-            ax.scatter(
-                sell_signals.index, 
-                sell_signals['price'], 
-                color=style_config['colors'].get('sell_signal', '#FF3B30'), 
-                marker='v', 
-                s=100, 
-                label='매도'
-            )
+        # signals 데이터프레임 형식 확인
+        if 'type' in signals.columns:
+            # 기존 코드: 'type' 열이 있는 경우
+            # 매수 신호
+            buy_signals = signals[signals['type'] == 'buy']
+            if not buy_signals.empty:
+                ax.scatter(
+                    buy_signals.index, 
+                    buy_signals['price'], 
+                    color=style_config['colors'].get('buy_signal', '#4CD964'), 
+                    marker='^', 
+                    s=100, 
+                    label='매수'
+                )
+            
+            # 매도 신호
+            sell_signals = signals[signals['type'] == 'sell']
+            if not sell_signals.empty:
+                ax.scatter(
+                    sell_signals.index, 
+                    sell_signals['price'], 
+                    color=style_config['colors'].get('sell_signal', '#FF3B30'), 
+                    marker='v', 
+                    s=100, 
+                    label='매도'
+                )
+        elif 'position' in signals.columns:
+            # 'position' 열을 사용하여 매수/매도 신호 표시
+            # position 값이 양수이면 매수, 음수이면 매도로 해석
+            buy_indices = signals[signals['position'] > 0].index
+            sell_indices = signals[signals['position'] < 0].index
+            
+            if len(buy_indices) > 0:
+                buy_prices = df.loc[buy_indices, 'close'].values
+                ax.scatter(
+                    buy_indices, 
+                    buy_prices, 
+                    color=style_config['colors'].get('buy_signal', '#4CD964'), 
+                    marker='^', 
+                    s=100, 
+                    label='매수'
+                )
+            
+            if len(sell_indices) > 0:
+                sell_prices = df.loc[sell_indices, 'close'].values
+                ax.scatter(
+                    sell_indices, 
+                    sell_prices, 
+                    color=style_config['colors'].get('sell_signal', '#FF3B30'), 
+                    marker='v', 
+                    s=100, 
+                    label='매도'
+                )
     
     # 텍스트 색상 가져오기
     text_color = style_config.get('colors', {}).get('text', 'white')

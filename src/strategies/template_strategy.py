@@ -87,6 +87,37 @@ class TemplateStrategy(BaseStrategy):
         
         return df
     
+    def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        백테스팅을 위한 거래 신호 생성
+        
+        이 메서드는 백테스팅 엔진에서 사용되며, apply() 메서드가 계산한 
+        signal과 position을 기반으로 실제 거래 신호를 생성합니다.
+        
+        Parameters:
+            df (pd.DataFrame): 이미 apply() 메서드로 지표가 계산된 데이터프레임
+            
+        Returns:
+            pd.DataFrame: 거래 신호가 있는 데이터프레임
+        """
+        # 신호가 포함된 행만 필터링
+        # position 값은 signal의 변화를 나타냄: 1(매수 진입), -1(매도 진입), 0(유지)
+        signal_df = df[df['position'] != 0].copy()
+        
+        # 결과 데이터프레임 준비
+        result_df = pd.DataFrame(index=signal_df.index)
+        
+        # 매수/매도 신호 설정
+        result_df['type'] = np.where(signal_df['position'] > 0, 'buy', 'sell')
+        result_df['ratio'] = 1.0  # 100% 투자/청산
+        
+        # 추가 정보를 포함하는 경우 (선택적)
+        # result_df['price'] = signal_df['close']      # 특정 가격으로 매매
+        # result_df['amount'] = 특정금액               # 특정 금액만 투자/청산
+        # result_df['ratio'] = 특정비율(0.0~1.0)      # 특정 비율만 투자/청산
+        
+        return result_df
+    
     @property
     def name(self) -> str:
         """전략 이름"""
