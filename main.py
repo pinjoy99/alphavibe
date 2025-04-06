@@ -80,9 +80,6 @@ LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 UPBIT_ACCESS_KEY = os.getenv('UPBIT_ACCESS_KEY')
 UPBIT_SECRET_KEY = os.getenv('UPBIT_SECRET_KEY')
 
-# 백테스팅 설정
-BACKTEST_RESULT_PATH = os.getenv('BACKTEST_RESULT_PATH', 'results/strategy_results')
-
 # Get the directory where this script is located
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -146,7 +143,8 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                     strategy_func=strategy_obj.generate_signals, 
                     initial_capital=initial_capital,
                     strategy_name=strategy_obj.name,
-                    ticker=ticker
+                    ticker=ticker,
+                    plot_results=False  # 내부에서 차트 생성하지 않도록 설정
                 )
                 
                 # 결과에 전략 정보 추가
@@ -199,7 +197,9 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                         strategy_name=strategy_obj.name,
                         ticker=ticker,
                         initial_capital=initial_capital,
-                        chart_dir=BACKTEST_CHART_PATH
+                        chart_dir=BACKTEST_CHART_PATH,
+                        period=period,
+                        interval=interval
                     )
                     results['chart_path'] = chart_path
                 except Exception as e:
@@ -491,10 +491,6 @@ async def main_async(args):
     
     # 시각화 모듈 사용하여 차트 디렉토리 설정
     charts_dir = setup_chart_dir(CHART_SAVE_PATH)
-    
-    # 백테스팅 결과 디렉토리 생성
-    if enable_backtest:
-        backtest_results_dir = setup_chart_dir(BACKTEST_RESULT_PATH)
     
     # List of tickers to analyze - KRW 마켓 심볼로 변환
     tickers = [f"KRW-{coin}" for coin in coins]

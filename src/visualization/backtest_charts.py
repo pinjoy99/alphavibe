@@ -91,9 +91,15 @@ def plot_price_data(
             # 매수 신호
             buy_signals = signals[signals['type'] == 'buy']
             if not buy_signals.empty:
+                # 'price' 컬럼이 없으면 'close' 값을 사용
+                if 'price' in buy_signals.columns:
+                    buy_prices = buy_signals['price']
+                else:
+                    buy_prices = df.loc[buy_signals.index, 'close'].values
+                
                 ax.scatter(
                     buy_signals.index, 
-                    buy_signals['price'], 
+                    buy_prices, 
                     color=style_config['colors'].get('buy_signal', '#4CD964'), 
                     marker='^', 
                     s=100, 
@@ -103,9 +109,15 @@ def plot_price_data(
             # 매도 신호
             sell_signals = signals[signals['type'] == 'sell']
             if not sell_signals.empty:
+                # 'price' 컬럼이 없으면 'close' 값을 사용
+                if 'price' in sell_signals.columns:
+                    sell_prices = sell_signals['price']
+                else:
+                    sell_prices = df.loc[sell_signals.index, 'close'].values
+                
                 ax.scatter(
                     sell_signals.index, 
-                    sell_signals['price'], 
+                    sell_prices, 
                     color=style_config['colors'].get('sell_signal', '#FF3B30'), 
                     marker='v', 
                     s=100, 

@@ -12,7 +12,8 @@ def visualize_results(
     ticker: str,
     initial_capital: float,
     chart_dir: str = BACKTEST_CHART_PATH,
-    style: str = 'tradingview'
+    style: str = 'tradingview',
+    **kwargs
 ) -> str:
     """
     백테스트 결과 시각화
@@ -27,6 +28,7 @@ def visualize_results(
         initial_capital (float): 초기 자본금
         chart_dir (str): 차트 저장 경로
         style (str): 차트 스타일
+        **kwargs: 추가 키워드 인자
     
     Returns:
         str: 차트 파일 경로
@@ -39,7 +41,15 @@ def visualize_results(
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     # '@' 문자가 있다면 'KRW-'로 대체 (Upbit 티커 형식)
     safe_ticker = ticker.replace('@', 'KRW-') if '@' in ticker else ticker
-    filename = f"{safe_ticker}_{strategy_name}_{timestamp}.png"
+    
+    # 현재 백테스트 정보에서 기간과 인터벌 가져오기 (이 정보가 함수 인자에 없으므로 다음 행에서 추가)
+    # 이 정보는 main.py에서 run_backtest 함수에서 처리될 때 결과에 이미 추가되어 있음
+    period_info = kwargs.get('period', '')
+    interval_info = kwargs.get('interval', '')
+    period_str = f"_{period_info}" if period_info else ""
+    interval_str = f"_{interval_info}" if interval_info else ""
+    
+    filename = f"{safe_ticker}_{strategy_name}{period_str}{interval_str}_{timestamp}.png"
     chart_path = os.path.join(chart_dir, filename)
     
     # 시각화 모듈 임포트

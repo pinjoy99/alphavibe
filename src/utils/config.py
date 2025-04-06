@@ -16,7 +16,6 @@ load_dotenv()
 # 경로 설정
 CHART_SAVE_PATH = 'results/analysis'
 BACKTEST_CHART_PATH = 'results/backtest_charts'
-BACKTEST_RESULT_PATH = 'results/strategy_results'
 
 # 하위 호환성을 위한 별칭
 CHART_DIR = CHART_SAVE_PATH  # 이전 코드와의 호환성 유지
