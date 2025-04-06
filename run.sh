@@ -4,15 +4,21 @@
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
+# Python에서 기본값 가져오기
+DEFAULT_COINS=$(python -c "from src.utils.config import DEFAULT_COINS; print(DEFAULT_COINS)")
+DEFAULT_INTERVAL=$(python -c "from src.utils.config import DEFAULT_INTERVAL; print(DEFAULT_INTERVAL)")
+DEFAULT_BACKTEST_PERIOD=$(python -c "from src.utils.config import DEFAULT_BACKTEST_PERIOD; print(DEFAULT_BACKTEST_PERIOD)")
+DEFAULT_INITIAL_CAPITAL=$(python -c "from src.utils.config import DEFAULT_INITIAL_CAPITAL; print(DEFAULT_INITIAL_CAPITAL)")
+
 # 기본값 설정
 TELEGRAM="false"
 BACKTEST="false"
 STRATEGY="sma"
-PERIOD="3m"
-INVEST="1000000"
+PERIOD="$DEFAULT_BACKTEST_PERIOD"
+INVEST="$DEFAULT_INITIAL_CAPITAL"
 ACCOUNT="false"
-COINS="BTC,ETH,XRP"
-INTERVAL="day"
+COINS="$DEFAULT_COINS"
+INTERVAL="$DEFAULT_INTERVAL"
 
 # 사용 가능한 전략 목록 가져오기
 get_available_strategies() {
@@ -122,11 +128,11 @@ while [[ $# -gt 0 ]]; do
       echo "  --telegram, -t             텔레그램 알림 활성화"
       echo "  --backtest, -b             백테스팅 모드 활성화"
       echo "  --strategy, -s STRATEGY    백테스팅 전략 선택 (기본값: sma)"
-      echo "  --period, -p PERIOD        백테스팅 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y, 기본값: 3m)"
-      echo "  --invest, -i AMOUNT        백테스팅 초기 투자금액 (기본값: 1,000,000원)"
+      echo "  --period, -p PERIOD        백테스팅 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y, 기본값: $PERIOD)"
+      echo "  --invest, -i AMOUNT        백테스팅 초기 투자금액 (기본값: $INVEST원)"
       echo "  --account, -a              계좌 정보 조회 모드 활성화"
-      echo "  --coins, -c COINS          분석할 코인 목록 (쉼표로 구분, 예: BTC,ETH,SOL)"
-      echo "  --interval, -v INTERVAL    데이터 간격 (예: day, minute15, minute60)"
+      echo "  --coins, -c COINS          분석할 코인 목록 (쉼표로 구분, 기본값: $COINS)"
+      echo "  --interval, -v INTERVAL    데이터 간격 (예: day, minute15, minute60, 기본값: $INTERVAL)"
       echo "  --help, -h                 도움말 표시"
       echo ""
       echo "전략 정보:"

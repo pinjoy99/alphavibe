@@ -39,6 +39,7 @@
    | BACKTEST_RESULT_PATH | 백테스트 결과 저장 경로 | results/strategy_results |
    | DEFAULT_INTERVAL | 기본 시간 간격 | day |
    | DEFAULT_COUNT | 조회할 데이터 개수 | 100 |
+   | DEFAULT_COINS | 기본 분석 코인 리스트 | BTC,ETH,XRP |
    | LOG_LEVEL | 로그 레벨 | INFO |
    | ENABLE_TELEGRAM | 텔레그램 알림 활성화 여부 | False |
    | DEFAULT_INITIAL_CAPITAL | 백테스팅 기본 초기 자본 | 1,000,000원 |

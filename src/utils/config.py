@@ -23,6 +23,7 @@ CHART_DIR = CHART_SAVE_PATH  # 이전 코드와의 호환성 유지
 # 데이터 조회 설정
 DEFAULT_INTERVAL = 'day'
 DEFAULT_COUNT = 100
+DEFAULT_COINS = 'BTC,ETH,XRP'  # 기본 분석 코인 리스트
 
 # 로그 설정
 LOG_LEVEL = 'INFO'

@@ -42,6 +42,9 @@ from src.visualization import (
 from src.trading.account import AccountManager
 from src.visualization.account_charts import plot_asset_distribution, plot_profit_loss
 
+# 설정 모듈 추가
+from src.utils.config import DEFAULT_COINS, DEFAULT_INTERVAL, DEFAULT_BACKTEST_PERIOD, DEFAULT_INITIAL_CAPITAL
+
 # 명령줄 인자 파싱
 def parse_args():
     parser = argparse.ArgumentParser(description="암호화폐 가격 분석")
@@ -55,11 +58,15 @@ def parse_args():
     
     parser.add_argument("--strategy", "-s", choices=available_strategies, default="sma", 
                       help="백테스팅 전략 선택 (기본값: sma)")
-    parser.add_argument("--period", "-p", type=str, default="3m", help="백테스팅 기간 또는 분석 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)")
-    parser.add_argument("--invest", "-i", type=float, default=1000000, help="백테스팅 초기 투자금액 (원화)")
+    parser.add_argument("--period", "-p", type=str, default=DEFAULT_BACKTEST_PERIOD, 
+                      help="백테스팅 기간 또는 분석 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)")
+    parser.add_argument("--invest", "-i", type=float, default=DEFAULT_INITIAL_CAPITAL, 
+                      help=f"백테스팅 초기 투자금액 (원화, 기본값: {DEFAULT_INITIAL_CAPITAL:,}원)")
     parser.add_argument("--account", "-a", action="store_true", help="계좌 정보 조회")
-    parser.add_argument("--coins", "-c", type=str, default="BTC,ETH,XRP", help="분석할 코인 목록 (쉼표로 구분, 예: BTC,ETH,SOL)")
-    parser.add_argument("--interval", "-v", type=str, default="day", help="데이터 간격 (예: day, minute15, minute60)")
+    parser.add_argument("--coins", "-c", type=str, default=DEFAULT_COINS, 
+                      help=f"분석할 코인 목록 (쉼표로 구분, 기본값: {DEFAULT_COINS})")
+    parser.add_argument("--interval", "-v", type=str, default=DEFAULT_INTERVAL, 
+                      help=f"데이터 간격 (예: day, minute15, minute60, 기본값: {DEFAULT_INTERVAL})")
     return parser.parse_args()
 
 # Load environment variables
@@ -67,8 +74,6 @@ load_dotenv()
 
 # Get settings from environment variables
 CHART_SAVE_PATH = os.getenv('CHART_SAVE_PATH', 'results/analysis')
-DEFAULT_INTERVAL = os.getenv('DEFAULT_INTERVAL', 'day')
-DEFAULT_COUNT = int(os.getenv('DEFAULT_COUNT', '100'))
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 # API key settings
