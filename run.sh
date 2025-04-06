@@ -14,20 +14,53 @@ ACCOUNT="false"
 
 # 사용 가능한 전략 목록 가져오기
 get_available_strategies() {
-  echo "가능한 전략을 확인하는 중..."
+  # Python을 사용하여 전략 레지스트리에서 전략 목록을 가져옴
   python -c "
 try:
   from src.strategies.strategy_registry import StrategyRegistry
-  StrategyRegistry.discover_strategies()
-  strategies = StrategyRegistry.get_available_strategies()
-  if strategies:
-    for s in sorted(strategies, key=lambda x: x['code']):
-      print(f\"{s['code']}|{s['name']}|{s['description']}\")
-  else:
-    print('레지스트리에서 전략을 찾을 수 없습니다.')
+  
+  # 레거시 전략 정보 (레지스트리에 아직 등록되지 않은 기본 전략들)
+  legacy_strategies = {
+    'bb': {
+      'name': '볼린저 밴드 전략',
+      'description': '20일 이동평균선을 중심으로 표준편차(2.0)에 따른 밴드를 활용, 하단 밴드 터치 시 매수, 상단 밴드 터치 시 매도'
+    },
+    'macd': {
+      'name': 'MACD 전략',
+      'description': '단기(12일)와 장기(26일) 지수이동평균의 차이와 신호선(9일)을 활용, MACD선이 신호선을 상향 돌파 시 매수, 하향 돌파 시 매도'
+    },
+    'rsi': {
+      'name': 'RSI 전략',
+      'description': '14일 기준 RSI 지표로 과매수(70)/과매도(30) 상태를 활용, 과매도 상태에서 반등 시 매수, 과매수 상태에서 하락 시 매도'
+    },
+    'sma_stoploss': {
+      'name': 'SMA+손익절 전략',
+      'description': '기본 SMA 전략에 익절(10%) 및 손절(-3%) 규칙 추가, 수익이 10%에 도달하면 익절하고, 손실이 -3%에 도달하면 손절'
+    }
+  }
+  
+  # 레지스트리에서 전략 가져오기
+  registry = StrategyRegistry()
+  registry.discover_strategies()
+  strategies = registry.get_available_strategies()
+  
+  # 등록된 전략 코드 목록
+  registered_codes = [s['code'] for s in strategies]
+  
+  # 레지스트리 전략과 레거시 전략 결합
+  for strategy in strategies:
+    code = strategy['code']
+    name = strategy['name']
+    desc = strategy['description']
+    print(f'{code}|{name}|{desc}')
+  
+  # 레거시 전략 중 레지스트리에 없는 것들 추가
+  for code, info in legacy_strategies.items():
+    if code not in registered_codes:
+      print(f'{code}|{info[\"name\"]}|{info[\"description\"]}')
 except Exception as e:
-  print(f'오류: {str(e)}')
-"
+  print(f'Error: {e}')
+  "
 }
 
 # 전략 도움말 생성
@@ -36,25 +69,10 @@ generate_strategy_help() {
   IFS=$'\n'
   strategies=($(get_available_strategies))
   
-  # 기본 전략 정보 표시
-  echo "  sma   - 이동평균선 전략: 단기(10일)와 장기(30일) 이동평균선의 교차 시점에 매수/매도 신호 발생"
-  echo "          골든 크로스(단기>장기) 시 매수, 데드 크로스(단기<장기) 시 매도"
-  echo "  bb    - 볼린저 밴드 전략: 20일 이동평균선을 중심으로 표준편차(2.0)에 따른 밴드를 활용"
-  echo "          하단 밴드 터치 시 매수, 상단 밴드 터치 시 매도"
-  echo "  macd  - MACD 전략: 단기(12일)와 장기(26일) 지수이동평균의 차이와 신호선(9일)을 활용"
-  echo "          MACD선이 신호선을 상향 돌파 시 매수, 하향 돌파 시 매도"
-  echo "  rsi   - RSI 전략: 14일 기준 RSI 지표로 과매수(70)/과매도(30) 상태를 활용"
-  echo "          과매도 상태에서 반등 시 매수, 과매수 상태에서 하락 시 매도"
-  echo "  sma_stoploss - SMA+손익절 전략: 기본 SMA 전략에 익절(10%) 및 손절(-3%) 규칙 추가"
-  echo "          수익이 10%에 도달하면 익절하고, 손실이 -3%에 도달하면 손절"
-  
-  # 새로운 자동 감지 전략 표시
+  # 모든 전략 표시 (레지스트리에서 가져옴)
   for strategy in "${strategies[@]}"; do
     IFS='|' read -r code name desc <<< "$strategy"
-    # 이미 위에서 표시된 기본 전략은 제외
-    if [[ "$code" != "sma" && "$code" != "bb" && "$code" != "macd" && "$code" != "rsi" && "$code" != "sma_stoploss" ]]; then
-      echo "  $code - $name: $desc"
-    fi
+    echo "  $code - $name: $desc"
   done
 }
 

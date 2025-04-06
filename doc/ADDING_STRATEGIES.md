@@ -26,7 +26,7 @@
 
 ## 3. 모듈에 전략 등록
 
-`__init__.py` 파일에 새 전략을 임포트하고 `__all__` 목록에 추가:
+새 전략 클래스는 `STRATEGY_CODE` 속성을 가지고 있으면 **자동으로 시스템에 등록**됩니다. 따라서 `__init__.py` 파일을 수정할 필요가 없습니다. 그러나 하위 호환성을 위해 추가할 수도 있습니다:
 
 ```python
 from .your_strategy_name_strategy import YourStrategyNameStrategy
@@ -40,7 +40,12 @@ __all__ = [
 
 ## 4. 전략 사용
 
-새 전략은 자동으로 시스템에 등록됩니다. 다음과 같이 사용할 수 있습니다:
+새 전략은 자동으로 시스템에 등록되며, 다음 명령으로 사용 가능한 전략 목록을 확인할 수 있습니다:
+```bash
+./run.sh --help
+```
+
+전략 사용 방법:
 ```bash
 ./run.sh --backtest --strategy your_strategy_code --period 3m
 ```
@@ -52,6 +57,8 @@ __all__ = [
 1. `StrategyRegistry`는 `src/strategies` 디렉토리에서 모든 전략 클래스를 자동으로 발견합니다.
 2. 각 전략 클래스는 `STRATEGY_CODE`를 통해 고유 식별자를 가집니다.
 3. CLI 인터페이스는 사용 가능한 모든 전략을 자동으로 인식합니다.
+4. 도움말(`./run.sh --help`)에 전략 정보가 자동으로 표시됩니다.
+5. **중요**: 전략을 추가해도 `run.sh` 파일을 수정할 필요가 없습니다. 전략 코드는 자동으로 도움말과 CLI에 통합됩니다.
 
 ### 전략 파라미터 관리
 
