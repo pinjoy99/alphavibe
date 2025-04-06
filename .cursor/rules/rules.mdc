@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Project Rules
+
+- Perform end-to-end testing after every modification.
+- Update all relevant documentation with every change.
+- Write clear and concise git commit messages (preferably under 5 lines).
+- Push changes only after completing the above steps.
