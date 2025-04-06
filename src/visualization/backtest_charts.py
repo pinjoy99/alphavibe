@@ -62,16 +62,16 @@ def get_default_style_config() -> Dict[str, Any]:
 def plot_price_data(
     ax: plt.Axes,
     df: pd.DataFrame,
-    signals: pd.DataFrame,
-    strategy_name: str,
+    signals: Optional[pd.DataFrame] = None,
+    strategy_name: str = "",
     style_config: Dict[str, Any] = None
 ) -> None:
     """
-    가격 차트와 매수/매도 신호를 그립니다.
+    가격 데이터와 매수/매도 신호를 시각화
     
     Parameters:
-        ax (plt.Axes): 그래프를 그릴 축
-        df (pd.DataFrame): 가격 데이터프레임
+        ax (plt.Axes): Matplotlib 축 객체
+        df (pd.DataFrame): 가격 데이터
         signals (pd.DataFrame): 매수/매도 신호 데이터프레임
         strategy_name (str): 전략 이름
         style_config (Dict[str, Any]): 스타일 설정
@@ -82,6 +82,22 @@ def plot_price_data(
     
     # 가격 차트 그리기
     ax.plot(df.index, df['close'], color=style_config['colors']['price'], linewidth=1.5, label='가격')
+    
+    # 이동평균선 추가
+    # 20일 이동평균선 (단기)
+    if len(df) >= 20:
+        ma20 = df['close'].rolling(window=20).mean()
+        ax.plot(df.index, ma20, color='#FF9500', linewidth=1.2, label='MA20', alpha=0.8)
+    
+    # 50일 이동평균선 (중기)
+    if len(df) >= 50:
+        ma50 = df['close'].rolling(window=50).mean()
+        ax.plot(df.index, ma50, color='#5AC8FA', linewidth=1.2, label='MA50', alpha=0.8)
+    
+    # 200일 이동평균선 (장기)
+    if len(df) >= 200:
+        ma200 = df['close'].rolling(window=200).mean()
+        ax.plot(df.index, ma200, color='#FFFFFF', linewidth=1.2, label='MA200', alpha=0.8)
     
     # 매수/매도 신호 표시
     if signals is not None and not signals.empty:
