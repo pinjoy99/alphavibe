@@ -11,6 +11,8 @@ STRATEGY="sma"
 PERIOD="3m"
 INVEST="1000000"
 ACCOUNT="false"
+COINS="BTC,ETH,XRP"
+INTERVAL="day"
 
 # 사용 가능한 전략 목록 가져오기
 get_available_strategies() {
@@ -104,6 +106,14 @@ while [[ $# -gt 0 ]]; do
       ACCOUNT="true"
       shift
       ;;
+    --coins|-c)
+      COINS="$2"
+      shift 2
+      ;;
+    --interval|-v)
+      INTERVAL="$2"
+      shift 2
+      ;;
     --help|-h)
       echo "===== AlphaVibe - 암호화폐 백테스팅 및 분석 도구 ====="
       echo "사용법: ./run.sh [옵션]"
@@ -115,6 +125,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --period, -p PERIOD        백테스팅 기간 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y, 기본값: 3m)"
       echo "  --invest, -i AMOUNT        백테스팅 초기 투자금액 (기본값: 1,000,000원)"
       echo "  --account, -a              계좌 정보 조회 모드 활성화"
+      echo "  --coins, -c COINS          분석할 코인 목록 (쉼표로 구분, 예: BTC,ETH,SOL)"
+      echo "  --interval, -v INTERVAL    데이터 간격 (예: day, minute15, minute60)"
       echo "  --help, -h                 도움말 표시"
       echo ""
       echo "전략 정보:"
@@ -138,6 +150,7 @@ while [[ $# -gt 0 ]]; do
       echo "  ./run.sh -b -s macd -p 6m        MACD 전략으로 6개월 백테스팅 실행"
       echo "  ./run.sh -b -s rsi -p 3m -i 2000000  RSI 전략, 3개월 기간, 초기자본 200만원으로 백테스팅"
       echo "  ./run.sh -b -s doomsday -p 1y    둠스데이 크로스 전략으로 1년간 백테스팅 실행"
+      echo "  ./run.sh -b -c BTC -s stochastic -p 1y  BTC만 스토캐스틱 전략으로 1년간 백테스팅"
       exit 0
       ;;
     *)
@@ -183,12 +196,18 @@ if [ "$BACKTEST" = "true" ]; then
   echo "  - 전략: $STRATEGY"
   echo "  - 기간: $PERIOD"
   echo "  - 초기 투자금액: $INVEST"
+  echo "  - 코인: $COINS"
+  echo "  - 데이터 간격: $INTERVAL"
   
-  OPTIONS="$OPTIONS --backtest --strategy $STRATEGY --period $PERIOD --invest $INVEST"
+  OPTIONS="$OPTIONS --backtest --strategy $STRATEGY --period $PERIOD --invest $INVEST --coins $COINS --interval $INTERVAL"
 elif [ "$ACCOUNT" = "true" ]; then
   echo "계좌 정보 조회 모드로 실행합니다."
 else
   echo "분석 모드로 실행합니다."
+  echo "  - 코인: $COINS"
+  echo "  - 데이터 간격: $INTERVAL"
+  
+  OPTIONS="$OPTIONS --coins $COINS --interval $INTERVAL"
 fi
 
 # 메인 프로그램 실행 (명령줄 인자로 전달)
