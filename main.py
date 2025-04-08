@@ -19,14 +19,9 @@ import koreanize_matplotlib  # 한글 폰트 적용
 # 한글 폰트 적용 후 다시 설정 (koreanize가 재설정할 수 있음)
 matplotlib.rcParams['axes.unicode_minus'] = False
 from src.api.upbit_api import get_historical_data, parse_period_to_datetime, get_backtest_data
-from src.backtest import (
-    backtest_strategy,
-    plot_backtest_results,
-    run_backtest_bt  # 새로운 백테스팅 함수 추가
-)
-from src.strategies import create_strategy
+from src.backtest import run_backtest_bt  # Backtesting.py 백테스팅 함수만 import
 from src.strategies.strategy_registry import StrategyRegistry
-from src.strategies.sma_strategy_bt import SMAStrategyBT  # 새로운 SMA 전략 추가
+from src.strategies.sma_strategy_bt import SMAStrategyBT  # Backtesting.py 기반 SMA 전략
 from src.notification import (
     send_telegram_message,
     send_telegram_chart,
@@ -52,8 +47,6 @@ def parse_args():
     parser = argparse.ArgumentParser(description="암호화폐 가격 분석")
     parser.add_argument("--telegram", "-t", action="store_true", help="텔레그램 알림 활성화")
     parser.add_argument("--backtest", "-b", action="store_true", help="백테스팅 모드 활성화")
-    # Backtesting.py 엔진 사용 옵션 추가
-    parser.add_argument("--bt", action="store_true", help="Backtesting.py 엔진 사용")
     
     # 사용 가능한 전략 목록 동적 생성
     StrategyRegistry.discover_strategies()
@@ -95,7 +88,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # 백테스팅 실행 함수
 # ----------------------
 
-async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool, interval: str = "minute60", use_bt: bool = False, params: Dict[str, Any] = None) -> None:
+async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool, interval: str = "minute60", params: Dict[str, Any] = None) -> None:
     """
     백테스팅 실행
     
@@ -107,7 +100,6 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         initial_capital (float): 초기 투자금액
         enable_telegram (bool): 텔레그램 알림 활성화 여부
         interval (str): 데이터 간격 (기본값: minute60)
-        use_bt (bool): Backtesting.py 엔진 사용 여부
         params (Dict[str, Any]): 전략 파라미터
     """
     print(f"\n백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period}, 간격: {interval})")
@@ -138,8 +130,8 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         try:
             results = None
             
-            # SMA 전략이고 Backtesting.py 사용 옵션이 활성화된 경우
-            if strategy == 'sma' and use_bt:
+            # 현재는 SMA 전략만 구현되어 있으므로 SMA 전략만 처리
+            if strategy == 'sma':
                 # 전략 파라미터 적용
                 short_window = strategy_params.get('short_window', 10)
                 long_window = strategy_params.get('long_window', 30)
@@ -152,25 +144,15 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                     initial_capital=initial_capital,
                     strategy_name="SMA Strategy",
                     ticker=ticker,
-                    short_window=short_window,  # 사용자 전략 파라미터 사용
-                    long_window=long_window     # 사용자 전략 파라미터 사용
+                    short_window=short_window,
+                    long_window=long_window
                 )
             else:
-                # 기존 전략은 이전 방식대로 실행
-                strategy_obj = create_strategy(strategy, **strategy_params)
-                if strategy_obj:
-                    # 전략 적용
-                    df = strategy_obj.apply(df, params=strategy_params)
-                    
-                    # 백테스팅 실행
-                    results = backtest_strategy(
-                        df=df, 
-                        strategy_func=strategy_obj.generate_signals, 
-                        initial_capital=initial_capital,
-                        strategy_name=strategy_obj.name,
-                        ticker=ticker,
-                        plot_results=False
-                    )
+                error_message = f"현재 {strategy} 전략은 지원되지 않습니다. SMA 전략만 사용 가능합니다."
+                print(f"\n⚠️ {error_message}")
+                if enable_telegram:
+                    await send_telegram_message(f"⚠️ {error_message}", enable_telegram, bot)
+                return
             
             if results:
                 # 결과 출력
@@ -469,7 +451,6 @@ async def main():
     initial_capital = args.invest
     coin_list = args.coins.split(',')
     interval = args.interval
-    use_bt = args.bt  # Backtesting.py 엔진 사용 여부
     
     # 전략 파라미터 파싱
     strategy_params = {}
@@ -527,7 +508,6 @@ async def main():
                 initial_capital=initial_capital, 
                 enable_telegram=enable_telegram, 
                 interval=interval,
-                use_bt=use_bt,  # Backtesting.py 엔진 사용 여부 전달
                 params=strategy_params  # 전략 파라미터 전달
             )
         return

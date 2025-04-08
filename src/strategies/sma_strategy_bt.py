@@ -8,13 +8,13 @@ class SMAStrategyBT(Strategy):
     """Backtesting.py를 사용한 단순 이동평균선(SMA) 전략 구현"""
     
     # 전략 메타데이터
-    STRATEGY_CODE: ClassVar[str] = "sma_bt"
-    STRATEGY_NAME: ClassVar[str] = "이동평균선 전략 (Backtesting.py)"
-    STRATEGY_DESCRIPTION: ClassVar[str] = "단기/장기 이동평균선의 교차 시점에 매수/매도 신호 발생"
+    CODE = "sma"
+    NAME = "이동평균선 전략"
+    DESCRIPTION = "단기/장기 이동평균선의 교차 시점에 매수/매도 신호 발생"
     
     # 전략 파라미터
-    short_window = 3  # 단기 이동평균선 기간 (3일로 변경)
-    long_window = 7   # 장기 이동평균선 기간 (7일로 변경)
+    short_window = 10  # 단기 이동평균선 기간
+    long_window = 30   # 장기 이동평균선 기간
     
     def init(self):
         """전략 초기화 - 지표 계산"""
@@ -72,23 +72,21 @@ class SMAStrategyBT(Strategy):
             self.sell_signals[-1] = 1  # 매도 시그널 표시
     
     @classmethod
-    def register_strategy_params(cls) -> List[Dict[str, Any]]:
-        """전략 파라미터 등록"""
-        return [
-            {
-                "name": "short_window",
+    def get_parameters(cls) -> Dict[str, Dict[str, Any]]:
+        """전략 파라미터 정의"""
+        return {
+            "short_window": {
                 "type": "int",
-                "default": 3,
+                "default": 10,
                 "description": "단기 이동평균선 기간",
                 "min": 2,
                 "max": 50
             },
-            {
-                "name": "long_window",
+            "long_window": {
                 "type": "int",
-                "default": 7,
+                "default": 30,
                 "description": "장기 이동평균선 기간",
                 "min": 5,
                 "max": 200
             }
-        ] 
+        } 
