@@ -40,19 +40,18 @@
 2. 백테스팅 실행:
 ```
 ./run.sh --backtest --strategy sma  # SMA 전략 백테스팅
-./run.sh -b -s bb  # 볼린저 밴드 전략 백테스팅 (단축 옵션)
-./run.sh -b -s macd -p 6m -i 5000000  # MACD 전략, 6개월, 5백만원 초기 자본
-./run.sh -b -c SOL -s rsi  # SOL 코인에 대해 RSI 전략으로 백테스팅
+./run.sh -b -s sma  # SMA 전략 백테스팅 (단축 옵션)
+./run.sh -b -s sma -p 6m -i 5000000  # SMA 전략, 6개월, 5백만원 초기 자본
+./run.sh -b -c SOL -s sma  # SOL 코인에 대해 SMA 전략으로 백테스팅
 ./run.sh -b -c BTC,ETH -v minute240  # BTC, ETH에 대해 4시간봉 데이터로 백테스팅
 ```
 
-### Backtesting.py 사용
+### Backtesting.py 기반 백테스팅
 
-시스템은 이제 `Backtesting.py` 라이브러리를 사용하는 새로운 백테스팅 엔진을 지원합니다. 현재 SMA 전략이 이 새로운 엔진으로 구현되어 있습니다.
+AlphaVibe는 Backtesting.py 라이브러리를 사용하여 높은 성능과 정확한 백테스팅 결과를 제공합니다.
 
-Backtesting.py를 사용하려면 아래 명령을 사용합니다:
 ```
-# Backtesting.py 엔진을 사용한 SMA 전략 실행
+# SMA 전략으로 BTC 백테스팅 (3개월, 1억원 초기자본)
 ./run.sh -b -s sma -p 3m -c BTC -i 100000000
 ```
 
@@ -122,7 +121,7 @@ Backtesting.py는 다음과 같은 다양한 차트를 생성합니다:
    - 포트폴리오 가치의 최대 낙폭을 시각화
    - 위험 관리에 중요한 정보 제공
 
-결과 차트는 `results/strategy_results` 폴더에 저장됩니다.
+결과 차트는 `results/backtest_charts` 폴더에 저장됩니다.
 
 #### 파라미터 최적화
 
@@ -140,7 +139,7 @@ Backtesting.py는 다음과 같은 다양한 차트를 생성합니다:
 ```
 
 **주의사항**:
-- Backtesting.py를 사용하는 전략은 일반적으로 최소 7일 이상의 데이터가 필요합니다.
+- 백테스팅은 일반적으로 최소 7일 이상의 데이터가 필요합니다.
 - 짧은 기간을 사용할 경우 최소한 장기 이동평균(기본 30일) 계산에 필요한 데이터 이상을 제공해야 합니다.
 - 고가의 코인을 백테스팅할 때는 초기 자본이 충분해야 정확한 결과를 얻을 수 있습니다.
 
@@ -182,7 +181,7 @@ Backtesting.py는 다음과 같은 다양한 차트를 생성합니다:
 
 - 콘솔에 각 종목의 기본 통계 정보가 출력됩니다.
 - `results/analysis` 폴더에 분석 차트 이미지가 저장됩니다.
-- `results/strategy_results` 폴더에 백테스트 결과 차트 이미지가 저장됩니다.
+- `results/backtest_charts` 폴더에 백테스트 결과 차트 이미지가 저장됩니다.
 - `results/account` 폴더에 계좌 정보 차트 이미지가 저장됩니다.
 - `results/account_history` 폴더에 계좌 정보 히스토리가 CSV 파일로 저장됩니다.
 - 텔레그램 알림을 활성화한 경우, 봇을 통해 알림과 차트가 전송됩니다.
@@ -191,7 +190,7 @@ Backtesting.py는 다음과 같은 다양한 차트를 생성합니다:
 
 시스템은 다양한 시각화 결과를 제공합니다:
 
-1. 백테스트 종합 차트 (Backtesting.py 사용 시)
+1. 백테스트 종합 차트
    - 가격 차트와 이동평균선
    - 매매 시그널 표시 (매수/매도 포인트)
    - 거래량 차트
