@@ -52,6 +52,8 @@ def parse_args():
     parser = argparse.ArgumentParser(description="암호화폐 가격 분석")
     parser.add_argument("--telegram", "-t", action="store_true", help="텔레그램 알림 활성화")
     parser.add_argument("--backtest", "-b", action="store_true", help="백테스팅 모드 활성화")
+    # Backtesting.py 엔진 사용 옵션 추가
+    parser.add_argument("--bt", action="store_true", help="Backtesting.py 엔진 사용")
     
     # 사용 가능한 전략 목록 동적 생성
     StrategyRegistry.discover_strategies()
@@ -69,6 +71,10 @@ def parse_args():
                       help=f"분석할 코인 목록 (쉼표로 구분, 기본값: {DEFAULT_COINS})")
     parser.add_argument("--interval", "-v", type=str, default=DEFAULT_INTERVAL, 
                       help=f"데이터 간격 (예: day, minute15, minute60, 기본값: {DEFAULT_INTERVAL})")
+    parser.add_argument("--params", type=str, 
+                      help="전략 파라미터 (쉼표로 구분된 key=value 쌍, 예: short_window=10,long_window=30)")
+    parser.add_argument("--style", type=str, choices=["default", "dark", "tradingview"], default="default",
+                      help="차트 스타일 (기본값: default)")
     return parser.parse_args()
 
 # Load environment variables
@@ -89,7 +95,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 # 백테스팅 실행 함수
 # ----------------------
 
-async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool, interval: str = "minute60") -> None:
+async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: str, initial_capital: float, enable_telegram: bool, interval: str = "minute60", use_bt: bool = False, params: Dict[str, Any] = None) -> None:
     """
     백테스팅 실행
     
@@ -101,6 +107,8 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         initial_capital (float): 초기 투자금액
         enable_telegram (bool): 텔레그램 알림 활성화 여부
         interval (str): 데이터 간격 (기본값: minute60)
+        use_bt (bool): Backtesting.py 엔진 사용 여부
+        params (Dict[str, Any]): 전략 파라미터
     """
     print(f"\n백테스팅 시작: {ticker} (전략: {strategy}, 기간: {period}, 간격: {interval})")
     
@@ -122,27 +130,37 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         strategy_params = {}
         if strategy_info:
             strategy_params = {p['name']: p['default'] for p in strategy_info['params']}
+            
+        # 사용자 지정 파라미터로 업데이트
+        if params:
+            strategy_params.update(params)
         
         try:
             results = None
             
-            # SMA 전략인 경우 Backtesting.py 사용
-            if strategy == 'sma':
+            # SMA 전략이고 Backtesting.py 사용 옵션이 활성화된 경우
+            if strategy == 'sma' and use_bt:
+                # 전략 파라미터 적용
+                short_window = strategy_params.get('short_window', 10)
+                long_window = strategy_params.get('long_window', 30)
+                
+                print(f"Backtesting.py 사용 - SMA 파라미터: short_window={short_window}, long_window={long_window}")
+                
                 results = run_backtest_bt(
                     df=df,
                     strategy_class=SMAStrategyBT,
                     initial_capital=initial_capital,
                     strategy_name="SMA Strategy",
                     ticker=ticker,
-                    short_window=3,  # 3일로 변경
-                    long_window=7    # 7일로 변경
+                    short_window=short_window,  # 사용자 전략 파라미터 사용
+                    long_window=long_window     # 사용자 전략 파라미터 사용
                 )
             else:
                 # 기존 전략은 이전 방식대로 실행
                 strategy_obj = create_strategy(strategy, **strategy_params)
                 if strategy_obj:
                     # 전략 적용
-                    df = strategy_obj.apply(df)
+                    df = strategy_obj.apply(df, params=strategy_params)
                     
                     # 백테스팅 실행
                     results = backtest_strategy(
@@ -437,80 +455,92 @@ async def check_account(bot: Optional[Bot], enable_telegram: bool) -> None:
         if enable_telegram:
             await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
 
-async def main_async(args):
-    # 명령줄 인자 추출
-    enable_telegram = args.telegram
-    enable_backtest = args.backtest
-    strategy = args.strategy
-    period = args.period
-    initial_capital = args.invest
-    enable_account = args.account
-    coins = args.coins.split(',')
-    interval = args.interval
-    
-    # 시각화 모듈 사용하여 차트 디렉토리 설정
-    charts_dir = setup_chart_dir(CHART_SAVE_PATH)
-    
-    # List of tickers to analyze - KRW 마켓 심볼로 변환
-    tickers = [f"KRW-{coin}" for coin in coins]
-    
-    # 텔레그램 봇 설정
-    TELEGRAM_BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
-    bot = None
-    if TELEGRAM_BOT_TOKEN:
-        bot = Bot(token=TELEGRAM_BOT_TOKEN)
-        print("텔레그램 봇이 설정되었습니다.")
-    else:
-        print("텔레그램 봇 토큰이 설정되지 않았습니다.")
-    
-    # 계좌 정보 조회 모드
-    if enable_account:
-        await check_account(bot, enable_telegram)
-        return
-    
-    if enable_telegram:
-        async with bot:
-            if enable_backtest:
-                await send_telegram_message("🚀 암호화폐 백테스팅 시작...", enable_telegram, bot)
-                
-                # 백테스팅 실행
-                for ticker in tickers:
-                    await run_backtest(bot, ticker, strategy, period, initial_capital, enable_telegram, interval)
-                
-                await send_telegram_message("✅ 백테스팅 완료!", enable_telegram, bot)
-            else:
-                await send_telegram_message("🚀 암호화폐 분석 시작...", enable_telegram, bot)
-                
-                # Analyze each ticker
-                for ticker in tickers:
-                    await analyze_ticker(bot, ticker, enable_telegram, interval, period)
-                
-                await send_telegram_message("✅ 분석 완료!", enable_telegram, bot)
-    else:
-        # 백테스팅 모드일 경우
-        if enable_backtest:
-            print("🚀 암호화폐 백테스팅 시작...")
-            
-            # 백테스팅 실행
-            for ticker in tickers:
-                await run_backtest(None, ticker, strategy, period, initial_capital, enable_telegram, interval)
-            
-            print("✅ 백테스팅 완료!")
-        else:
-            print("🚀 암호화폐 분석 시작...")
-            
-            # Run without telegram notifications
-            for ticker in tickers:
-                await analyze_ticker(None, ticker, enable_telegram, interval, period)
-            
-            print("✅ 분석 완료!")
-
-def main():
+# 메인 함수
+async def main():
     # 명령줄 인자 파싱
     args = parse_args()
     
-    # Run the async main function
-    asyncio.run(main_async(args))
+    # 설정값
+    enable_telegram = args.telegram
+    backtest_mode = args.backtest
+    account_mode = args.account
+    strategy = args.strategy
+    period = args.period
+    initial_capital = args.invest
+    coin_list = args.coins.split(',')
+    interval = args.interval
+    use_bt = args.bt  # Backtesting.py 엔진 사용 여부
+    
+    # 전략 파라미터 파싱
+    strategy_params = {}
+    if args.params:
+        for param in args.params.split(','):
+            if '=' in param:
+                key, value = param.split('=')
+                # 숫자는 float로 변환 (정수로 표현 가능하면 int로)
+                try:
+                    num_value = float(value)
+                    if num_value.is_integer():
+                        num_value = int(num_value)
+                    strategy_params[key] = num_value
+                except ValueError:
+                    # 숫자가 아니면 문자열로 유지
+                    strategy_params[key] = value
+    
+    # 텔레그램 설정
+    bot = None
+    if enable_telegram:
+        try:
+            TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+            TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+            
+            if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+                print("⚠️ 텔레그램 설정이 완료되지 않았습니다. .env 파일을 확인하세요.")
+                enable_telegram = False
+            else:
+                bot = Bot(token=TELEGRAM_TOKEN)
+        except Exception as e:
+            print(f"⚠️ 텔레그램 설정 중 오류: {e}")
+            enable_telegram = False
+    
+    # 차트 저장 디렉토리 설정
+    setup_chart_dir()
+    
+    # 계좌 조회 모드
+    if account_mode:
+        await check_account(bot, enable_telegram)
+        return
+    
+    # 백테스팅 모드
+    if backtest_mode:
+        for ticker in coin_list:
+            # KRW- 접두사 추가 (없는 경우)
+            if not ticker.startswith("KRW-"):
+                ticker = f"KRW-{ticker}"
+                
+            # 백테스팅 실행
+            await run_backtest(
+                bot=bot, 
+                ticker=ticker, 
+                strategy=strategy, 
+                period=period, 
+                initial_capital=initial_capital, 
+                enable_telegram=enable_telegram, 
+                interval=interval,
+                use_bt=use_bt,  # Backtesting.py 엔진 사용 여부 전달
+                params=strategy_params  # 전략 파라미터 전달
+            )
+        return
+        
+    # 분석 모드 (기본)
+    for ticker in coin_list:
+        # KRW- 접두사 추가 (없는 경우)
+        if not ticker.startswith("KRW-"):
+            ticker = f"KRW-{ticker}"
+        
+        # 분석 실행
+        await analyze_ticker(bot, ticker, enable_telegram, interval, period)
 
+# 스크립트 실행
 if __name__ == "__main__":
-    main() 
+    asyncio.run(main()) 

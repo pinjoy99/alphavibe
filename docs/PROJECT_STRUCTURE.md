@@ -27,12 +27,16 @@
 │   ├── api/                  # API 관련 코드
 │   ├── analysis/             # 시장 분석 관련 코드
 │   ├── backtest/             # 백테스팅 엔진
+│   │   ├── __init__.py       # 모듈 초기화
+│   │   ├── backtest_engine.py # 기존 백테스팅 엔진
+│   │   └── backtest_engine_bt.py # Backtesting.py 기반 엔진
 │   ├── indicators/           # 기술적 지표 계산 모듈
 │   ├── notification/         # 알림 관련 코드 (텔레그램 등)
 │   ├── strategies/           # 거래 전략 구현
 │   │   ├── __init__.py       # 모듈 초기화
 │   │   ├── base_strategy.py  # 기본 전략 인터페이스
 │   │   ├── sma_strategy.py   # SMA 전략 구현
+│   │   ├── sma_strategy_bt.py # Backtesting.py용 SMA 전략 구현
 │   │   ├── bb_strategy.py    # 볼린저 밴드 전략 구현
 │   │   ├── macd_strategy.py  # MACD 전략 구현
 │   │   ├── rsi_strategy.py   # RSI 전략 구현
@@ -75,14 +79,21 @@ Upbit API와 통신하여 과거 가격 데이터를 가져오고, 계좌 정보
 다양한 기술적 지표를 계산하는 함수를 제공합니다. RSI, MACD, 볼린저 밴드 등 기술적 지표 계산 로직이 포함되어 있습니다.
 
 ### 백테스팅 모듈 (src/backtest)
-다양한 트레이딩 전략을 시뮬레이션하고 결과를 분석합니다. 수익률, 최대 낙폭, 거래 횟수 등 다양한 지표를 계산합니다.
+두 가지 백테스팅 엔진을 제공합니다:
+1. **커스텀 백테스팅 엔진** (`backtest_engine.py`): 자체 개발한 백테스팅 엔진으로, 다양한 트레이딩 전략을 시뮬레이션하고 결과를 분석합니다.
+2. **Backtesting.py 기반 엔진** (`backtest_engine_bt.py`): 오픈소스 Backtesting.py 라이브러리를 사용한 엔진으로, 강력한 시각화 및 성능 분석 기능을 제공합니다.
+
+두 엔진 모두 수익률, 최대 낙폭, 거래 횟수 등 다양한 지표를 계산하며, 사용자는 원하는 엔진을 선택하여 백테스팅을 수행할 수 있습니다.
 
 ### 전략 모듈 (src/strategies)
 트레이딩 전략 구현. 전략 패턴을 사용하여 모듈화되어 있어 쉽게 새로운 전략을 추가할 수 있습니다.
-- `base_strategy.py`: 모든 전략의 기본 인터페이스
+- `base_strategy.py`: 자체 백테스팅 엔진용 기본 전략 인터페이스
 - `strategy_registry.py`: 전략 자동 등록 및 관리 시스템
 - `template_strategy.py`: 새 전략 개발을 위한 템플릿
 - 각 전략 구현 파일: 구체적인 전략 로직 구현
+  - 일반 전략 파일 (예: `sma_strategy.py`): 자체 백테스팅 엔진에서 사용
+  - Backtesting.py 전략 파일 (예: `sma_strategy_bt.py`): Backtesting.py 엔진용 전략으로, 
+    `init()` 및 `next()` 메서드를 통해 구현됩니다.
 
 ### 거래 모듈 (src/trading)
 계좌 정보 관리 및 분석, 자산 분포 계산 등 거래와 관련된 기능을 제공합니다.

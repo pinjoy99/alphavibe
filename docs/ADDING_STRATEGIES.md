@@ -1,187 +1,436 @@
-# 새 거래 전략 추가 방법
+# 전략 추가 가이드
 
-이 가이드는 AlphaVibe 시스템에 새로운 거래 전략을 추가하는 방법을 설명합니다.
+AlphaVibe 시스템에 새로운 거래 전략을 추가하는 방법을 설명합니다. 두 가지 유형의 전략을 추가할 수 있습니다:
 
-## 1. 템플릿 파일 복사 및 수정
+1. **기본 전략**: 자체 개발 백테스팅 엔진용(`BaseStrategy` 상속)
+2. **Backtesting.py 전략**: Backtesting.py 라이브러리용(`Strategy` 상속)
 
-1. `src/strategies/template_strategy.py` 파일을 복사하여 새 전략 파일 생성:
+## 1. 기본 전략 추가하기 (자체 백테스팅 엔진용)
+
+### 1.1 전략 템플릿 복사 및 수정
+
+1. `src/strategies/template_strategy.py` 파일을 복사하여 새 파일을 만듭니다.
    ```bash
-   cp src/strategies/template_strategy.py src/strategies/your_strategy_name_strategy.py
+   cp src/strategies/template_strategy.py src/strategies/your_strategy_name.py
    ```
 
-2. 새 파일에서 다음 항목을 수정:
-   - 클래스 이름 (`TemplateStrategy` → `YourStrategyNameStrategy`)
-   - 메타데이터: `STRATEGY_CODE`, `STRATEGY_NAME`, `STRATEGY_DESCRIPTION`
-   - `register_strategy_params()` 메서드에 파라미터 정보 추가
-   - `__init__()` 생성자 수정
-   - `apply()` 메서드에 전략 로직 구현
-   - `params` 프로퍼티 업데이트
+2. 새 파일에서 클래스 이름과 메타데이터를 수정합니다.
+   ```python
+   class YourStrategyName(BaseStrategy):
+       """
+       YourStrategyName 전략 클래스
+       
+       이 전략은 ...
+       """
+       
+       # 전략 메타데이터
+       CODE = 'your_strategy_code'  # 전략 코드 (명령줄 인자로 사용)
+       NAME = '당신의 전략 이름'     # 전략 이름 (표시용)
+       DESCRIPTION = '당신의 전략에 대한 설명...'
+   ```
 
-## 2. 전략 로직 구현
+### 1.2 전략 로직 구현
 
-`apply()` 메서드에 전략 로직을 구현하세요. 중요 사항:
-- 데이터프레임에 'signal' 컬럼 추가 (1: 매수, -1: 매도, 0: 중립)
-- 'position' 컬럼을 통해 거래 시점 감지 (신호 변화)
-- 필요한 모든 지표 계산
-
-## 3. 모듈에 전략 등록
-
-새 전략 클래스는 `STRATEGY_CODE` 속성을 가지고 있으면 **자동으로 시스템에 등록**됩니다. 따라서 `__init__.py` 파일을 수정할 필요가 없습니다. 그러나 하위 호환성을 위해 추가할 수도 있습니다:
+전략의 핵심 로직은 `apply()` 메서드에 구현합니다. 이 메서드는 가격 데이터를 받아 기술적 지표를 계산하고 매수/매도 신호를 생성합니다.
 
 ```python
-from .your_strategy_name_strategy import YourStrategyNameStrategy
-# ...
-__all__ = [
-    # ... 
-    'YourStrategyNameStrategy',
-    # ...
-]
+def apply(self, df, params=None):
+    """
+    전략 로직을 적용하여 매수/매도 신호를 생성합니다.
+    
+    Args:
+        df (pd.DataFrame): 가격 데이터
+        params (dict, optional): 전략 파라미터
+        
+    Returns:
+        pd.DataFrame: 신호가 추가된 데이터프레임
+    """
+    # 파라미터 설정
+    short_window = params.get('short_window', 10)
+    long_window = params.get('long_window', 30)
+    
+    # 지표 계산 
+    df['short_ma'] = df['close'].rolling(window=short_window).mean()
+    df['long_ma'] = df['close'].rolling(window=long_window).mean()
+    
+    # 시그널 생성
+    df['signal'] = 0  # 기본값 = 중립
+    df.loc[df['short_ma'] > df['long_ma'], 'signal'] = 1  # 매수 신호
+    df.loc[df['short_ma'] < df['long_ma'], 'signal'] = -1  # 매도 신호
+    
+    # 기타 로직...
+    
+    return df
 ```
 
-## 4. 전략 사용
+### 1.3 파라미터 정의
 
-새 전략은 자동으로 시스템에 등록되며, 다음 명령으로 사용 가능한 전략 목록을 확인할 수 있습니다:
-```bash
-./run.sh --help
-```
-
-전략 사용 방법:
-```bash
-./run.sh --backtest --strategy your_strategy_code --period 3m
-```
-
-## 5. 작동 원리
-
-### 전략 자동 발견 과정
-
-1. `StrategyRegistry`는 `src/strategies` 디렉토리에서 모든 전략 클래스를 자동으로 발견합니다.
-2. 각 전략 클래스는 `STRATEGY_CODE`를 통해 고유 식별자를 가집니다.
-3. CLI 인터페이스는 사용 가능한 모든 전략을 자동으로 인식합니다.
-4. 도움말(`./run.sh --help`)에 전략 정보가 자동으로 표시됩니다.
-5. **중요**: 전략을 추가해도 `run.sh` 파일을 수정할 필요가 없습니다. 전략 코드는 자동으로 도움말과 CLI에 통합됩니다.
-
-### 전략 파라미터 관리
-
-전략 파라미터는 `register_strategy_params()` 메서드를 통해 중앙에서 관리됩니다:
+전략에 사용되는 파라미터를 정의하고 기본값을 설정합니다.
 
 ```python
 @classmethod
-def register_strategy_params(cls):
-    return [
-        {
-            "name": "window",
-            "type": "int",
-            "default": 14,
-            "description": "기간",
-            "min": 2,
-            "max": 100
-        }
-        # 추가 파라미터...
-    ]
-```
-
-### 백테스트 엔진을 위한 거래 신호 생성
-
-`generate_signals()` 메서드는 백테스트 엔진에서 사용되는 실제 거래 신호를 생성합니다:
-
-```python
-def generate_signals(self, df: pd.DataFrame) -> pd.DataFrame:
+def get_parameters(cls):
     """
-    백테스팅을 위한 거래 신호 생성
+    전략에 사용되는 파라미터와 기본값을 반환합니다.
     
-    Parameters:
-        df (pd.DataFrame): 이미 apply() 메서드로 지표가 계산된 데이터프레임
-        
     Returns:
-        pd.DataFrame: 거래 신호가 있는 데이터프레임
+        dict: 파라미터 이름과 기본값
     """
-    # 신호가 포함된 행만 필터링
-    # position 값은 signal의 변화를 나타냄: 1(매수 진입), -1(매도 진입), 0(유지)
-    signal_df = df[df['position'] != 0].copy()
-    
-    # 결과 데이터프레임 준비
-    result_df = pd.DataFrame(index=signal_df.index)
-    
-    # 매수/매도 신호 설정
-    result_df['type'] = np.where(signal_df['position'] > 0, 'buy', 'sell')
-    result_df['ratio'] = 1.0  # 100% 투자/청산
-    
-    return result_df
+    return {
+        'short_window': {
+            'default': 10,
+            'description': '단기 이동평균 기간',
+            'type': 'int',
+            'min': 2,
+            'max': 50
+        },
+        'long_window': {
+            'default': 30, 
+            'description': '장기 이동평균 기간',
+            'type': 'int',
+            'min': 5,
+            'max': 200
+        }
+    }
 ```
 
-이 메서드는 다음과 같은 역할을 합니다:
-- `position != 0`인 행만 필터링하여 실제 거래가 발생하는 시점만 추출
-- 새로운 데이터프레임에 매수/매도 신호 타입과 비율을 설정
-- `type`은 'buy' 또는 'sell' 값을 가짐
-- `ratio`는 투자/청산 비율을 나타냄 (기본값: 1.0, 즉 100%)
+## 2. Backtesting.py 전략 추가하기
 
-**중요**: 백테스트 엔진은 이 형식의 데이터프레임을 기대하므로, 모든 전략은 이 형식을 따라야 합니다. 기본 구현은 `BaseStrategy` 클래스에서 제공되므로 별도의 구현이 필요 없으나, 특별한 처리가 필요한 경우 오버라이드할 수 있습니다.
+### 2.1 전략 파일 생성
 
-## 예제
-
-### 1. 간단한 모멘텀 전략 예제
+Backtesting.py 기반 전략은 다른 구조를 가집니다. 새 파일을 만들고 다음 템플릿을 사용하세요:
 
 ```python
-class MomentumStrategy(BaseStrategy):
-    STRATEGY_CODE = "momentum"
-    STRATEGY_NAME = "모멘텀 전략"
-    STRATEGY_DESCRIPTION = "N일 기준 가격 변화율을 활용한 모멘텀 전략"
+from backtesting import Strategy
+from backtesting.lib import crossover
+import pandas as pd
+import numpy as np
+
+class YourStrategyNameBT(Strategy):
+    """
+    YourStrategyName 전략 - Backtesting.py 버전
+    
+    이 전략은 ...
+    """
+    
+    # 전략 메타데이터
+    CODE = 'your_strategy_code'  # 전략 코드 (명령줄 인자로 사용)
+    NAME = '당신의 전략 이름'     # 전략 이름 (표시용)
+    DESCRIPTION = '당신의 전략에 대한 설명...'
+    
+    # 전략 파라미터 
+    short_window = 10  # 단기 이동평균 기간
+    long_window = 30   # 장기 이동평균 기간
+    
+    def init(self):
+        """
+        전략 초기화 - 지표 계산
+        """
+        # 데이터 준비
+        price = self.data.Close
+        
+        # 지표 계산
+        self.short_ma = self.I(lambda: pd.Series(price).rolling(self.short_window).mean())
+        self.long_ma = self.I(lambda: pd.Series(price).rolling(self.long_window).mean())
+    
+    def next(self):
+        """
+        매 봉마다 실행되는 트레이딩 로직
+        """
+        # 매수 조건 - 골든 크로스
+        if crossover(self.short_ma, self.long_ma):
+            self.buy()
+        
+        # 매도 조건 - 데드 크로스
+        elif crossover(self.long_ma, self.short_ma):
+            self.sell()
+            
+    @classmethod
+    def get_parameters(cls):
+        """
+        전략에 사용되는 파라미터와 설명을 반환합니다.
+        
+        Returns:
+            dict: 파라미터 이름과 속성
+        """
+        return {
+            'short_window': {
+                'default': 10,
+                'description': '단기 이동평균 기간',
+                'type': 'int',
+                'min': 2,
+                'max': 50
+            },
+            'long_window': {
+                'default': 30, 
+                'description': '장기 이동평균 기간',
+                'type': 'int',
+                'min': 5,
+                'max': 200
+            }
+        }
+```
+
+### 2.2 Backtesting.py 전략 구조 이해하기
+
+Backtesting.py 전략은 두 개의 핵심 메서드로 구성됩니다:
+
+1. **init()**: 전략이 처음 시작될 때 호출되며, 지표를 계산하고 초기화합니다.
+   - `self.I()` 메서드를 사용하여 지표를 등록합니다.
+   - 람다 함수를 사용하여 계산 로직을 정의합니다.
+
+2. **next()**: 매 봉마다 호출되며, 실제 트레이딩 로직을 구현합니다.
+   - `self.buy()`, `self.sell()` 메서드로 거래를 실행합니다.
+   - `crossover()` 같은 Backtesting.py 라이브러리 함수를 활용할 수 있습니다.
+
+### 2.3 실제 예제: SMA 전략
+
+다음은 간단한 이동평균 교차 전략의 실제 구현 예시입니다:
+
+```python
+# src/strategies/sma_strategy_bt.py
+from backtesting import Strategy
+from backtesting.lib import crossover
+import pandas as pd
+
+class SMAStrategyBT(Strategy):
+    """
+    SMA(Simple Moving Average) 전략 - Backtesting.py 버전
+    
+    단기 이동평균(short_sma)과 장기 이동평균(long_sma)의 교차를 이용한 전략입니다.
+    - 골든 크로스(단기 > 장기): 매수 신호
+    - 데드 크로스(단기 < 장기): 매도 신호
+    """
+    
+    # 전략 메타데이터
+    CODE = 'sma'
+    NAME = '단순 이동평균 교차 전략'
+    DESCRIPTION = '단기/장기 이동평균의 교차를 이용한 추세 추종 전략'
+    
+    # 전략 파라미터
+    short_window = 10  # 단기 이동평균 기간
+    long_window = 30   # 장기 이동평균 기간
+    
+    def init(self):
+        """
+        지표 초기화: 단기 및 장기 이동평균 계산
+        """
+        # 가격 데이터
+        price = self.data.Close
+        
+        # 이동평균 계산
+        self.short_sma = self.I(lambda: pd.Series(price).rolling(self.short_window).mean())
+        self.long_sma = self.I(lambda: pd.Series(price).rolling(self.long_window).mean())
+    
+    def next(self):
+        """
+        매 봉마다 실행되는 트레이딩 로직
+        """
+        # 포지션이 없고 골든 크로스 발생 시 매수
+        if not self.position and crossover(self.short_sma, self.long_sma):
+            self.buy()
+        
+        # 포지션이 있고 데드 크로스 발생 시 매도
+        elif self.position and crossover(self.long_sma, self.short_sma):
+            self.sell()
     
     @classmethod
-    def register_strategy_params(cls):
-        return [
-            {
-                "name": "window",
-                "type": "int",
-                "default": 10,
-                "description": "모멘텀 계산 기간",
-                "min": 1,
-                "max": 100
+    def get_parameters(cls):
+        """
+        전략 파라미터 정의
+        """
+        return {
+            'short_window': {
+                'default': 10,
+                'description': '단기 이동평균 기간',
+                'type': 'int',
+                'min': 2,
+                'max': 50
             },
-            {
-                "name": "threshold",
-                "type": "float",
-                "default": 0.05,
-                "description": "매수/매도 임계값",
-                "min": 0.01,
-                "max": 0.2
+            'long_window': {
+                'default': 30, 
+                'description': '장기 이동평균 기간',
+                'type': 'int',
+                'min': 5,
+                'max': 200
             }
-        ]
+        }
+```
+
+## 3. 전략 레지스트리에 등록
+
+새 전략은 자동으로 레지스트리에 등록됩니다. 시스템은 `src/strategies` 폴더의 모든 전략 클래스를 자동으로 검색하여 등록합니다.
+
+하지만 아래와 같은 경우에는 특별한 처리가 필요할 수 있습니다:
+
+1. 동일한 CODE를 가진 전략이 여러 개 있는 경우(예: 기본 버전과 Backtesting.py 버전)
+2. 특정 조건에서만 활성화되어야 하는 전략
+
+이런 경우에는 `src/strategies/__init__.py` 파일을 수정해야 할 수 있습니다.
+
+## 4. 전략 사용 방법
+
+### 4.1 기본 전략 사용
+
+```bash
+./run.sh -b -s your_strategy_code -p 6m -c BTC
+```
+
+### 4.2 Backtesting.py 전략 사용
+
+```bash
+./run.sh -b -s your_strategy_code -bt -p 6m -c BTC
+```
+
+여기서 `-bt` 플래그는 Backtesting.py 엔진을 사용하도록 지정합니다.
+
+## 5. 전략 발견 방식
+
+AlphaVibe 시스템은 다음 방식으로 전략을 발견합니다:
+
+1. `src/strategies` 폴더에서 모든 Python 파일을 검색합니다.
+2. 각 파일에서 `BaseStrategy` 또는 Backtesting.py의 `Strategy`를 상속받는 클래스를 찾습니다.
+3. 발견된 클래스가 필수 속성(`CODE`, `NAME`, `DESCRIPTION`)을 가지고 있는지 확인합니다.
+4. 유효한 전략 클래스는 전략 레지스트리에 등록됩니다.
+
+## 6. 파라미터 관리
+
+전략 파라미터는 다음 위치에서 설정할 수 있습니다:
+
+1. **기본값**: `get_parameters()` 메서드에서 정의된 기본값
+2. **명령줄 인자**: `--params` 플래그를 사용하여 실행 시 지정
+   ```bash
+   ./run.sh -b -s your_strategy_code -p 6m -c BTC --params short_window=15,long_window=45
+   ```
+3. **구성 파일**: `config.py`에 있는 전략별 기본 구성 사용
+
+## 7. 추가 예제: 모멘텀 전략
+
+다음은 간단한 모멘텀 전략 구현 예시입니다:
+
+```python
+# src/strategies/momentum_strategy.py
+from src.strategies.base_strategy import BaseStrategy
+import pandas as pd
+import numpy as np
+
+class MomentumStrategy(BaseStrategy):
+    """
+    모멘텀 전략
     
-    def __init__(self, window=10, threshold=0.05):
-        self._window = window
-        self._threshold = threshold
+    이전 기간의 가격 변화를 기반으로 모멘텀을 계산하고, 이를 기반으로 매수/매도 결정
+    """
     
-    def apply(self, df):
-        df = self.validate_data(df).copy()
+    # 전략 메타데이터
+    CODE = 'momentum'
+    NAME = '모멘텀 전략'
+    DESCRIPTION = '가격 모멘텀을 기반으로 하는 트레이딩 전략'
+    
+    def apply(self, df, params=None):
+        """모멘텀 전략 로직 적용"""
+        # 파라미터 설정
+        window = params.get('window', 14)
+        threshold = params.get('threshold', 0)
         
-        # 모멘텀 계산 (N일 가격 변화율)
-        df['momentum'] = df['close'].pct_change(self._window)
+        # 모멘텀 계산 (현재 가격 - n일 전 가격)
+        df['momentum'] = df['close'] - df['close'].shift(window)
         
         # 신호 생성
         df['signal'] = 0
-        df.loc[df['momentum'] > self._threshold, 'signal'] = 1  # 매수
-        df.loc[df['momentum'] < -self._threshold, 'signal'] = -1  # 매도
-        
-        # 거래 시점 감지
-        df['position'] = df['signal'].diff()
+        df.loc[df['momentum'] > threshold, 'signal'] = 1  # 매수 신호
+        df.loc[df['momentum'] < -threshold, 'signal'] = -1  # 매도 신호
         
         return df
+    
+    @classmethod
+    def get_parameters(cls):
+        """전략 파라미터 정의"""
+        return {
+            'window': {
+                'default': 14,
+                'description': '모멘텀 계산 기간',
+                'type': 'int',
+                'min': 1,
+                'max': 100
+            },
+            'threshold': {
+                'default': 0,
+                'description': '신호 발생 임계값',
+                'type': 'float',
+                'min': 0,
+                'max': 10000
+            }
+        }
 ```
 
-## 문제 해결
+## 8. Backtesting.py 모멘텀 전략 예제
 
-- 전략이 등록되지 않는 경우: `STRATEGY_CODE` 설정 확인
-- 파라미터 오류: `register_strategy_params()`와 `__init__()` 일치 여부 확인
-- 데이터 부족 경고: 각 전략은 `get_min_required_rows()`를 통해 필요한 최소 데이터 행 수를 지정합니다. 데이터가 부족한 경우 시스템은 에러 대신 친화적인 경고 메시지를 표시합니다:
-  ```
-  ⚠️ 경고: 전략 적용에 최소 35개 행이 필요합니다. 현재: 31
-  다음 옵션을 시도해보세요:
-    1. 더 긴 기간 사용: -p 3m 또는 -p 6m
-    2. 더 짧은 시간 간격 사용: -v minute60 또는 -v minute30
-    3. 더 많은 데이터가 필요한 전략이므로 다른 전략을 시도
-  ```
-  이 경우 다음 해결 방법을 시도해 볼 수 있습니다:
-  - 기간 매개변수 확장 (예: `-p 3m` 또는 `-p 6m`)
-  - 더 작은 시간 간격 사용 (예: `-v minute60`)
-  - 필요한 데이터가 더 적은 다른 전략 시도 
+다음은 동일한 모멘텀 전략을 Backtesting.py로 구현한 예시입니다:
+
+```python
+# src/strategies/momentum_strategy_bt.py
+from backtesting import Strategy
+import pandas as pd
+import numpy as np
+
+class MomentumStrategyBT(Strategy):
+    """
+    모멘텀 전략 - Backtesting.py 버전
+    
+    이전 기간의 가격 변화를 기반으로 모멘텀을 계산하고, 이를 기반으로 매수/매도 결정
+    """
+    
+    # 전략 메타데이터
+    CODE = 'momentum'
+    NAME = '모멘텀 전략'
+    DESCRIPTION = '가격 모멘텀을 기반으로 하는 트레이딩 전략'
+    
+    # 전략 파라미터
+    window = 14       # 모멘텀 계산 기간
+    threshold = 0     # 신호 발생 임계값
+    
+    def init(self):
+        """지표 초기화"""
+        # 가격 데이터
+        close = self.data.Close
+        
+        # 모멘텀 계산 (현재 가격 - n일 전 가격)
+        self.momentum = self.I(lambda: pd.Series(close) - pd.Series(close).shift(self.window))
+    
+    def next(self):
+        """트레이딩 로직"""
+        # 매수 조건: 모멘텀이 임계값보다 높음
+        if self.momentum[-1] > self.threshold and not self.position:
+            self.buy()
+        
+        # 매도 조건: 모멘텀이 음수 임계값보다 낮음
+        elif self.momentum[-1] < -self.threshold and self.position:
+            self.sell()
+    
+    @classmethod
+    def get_parameters(cls):
+        """전략 파라미터 정의"""
+        return {
+            'window': {
+                'default': 14,
+                'description': '모멘텀 계산 기간',
+                'type': 'int',
+                'min': 1,
+                'max': 100
+            },
+            'threshold': {
+                'default': 0,
+                'description': '신호 발생 임계값',
+                'type': 'float',
+                'min': 0,
+                'max': 10000
+            }
+        }
+```
+
+## 9. 결론
+
+AlphaVibe 시스템에서 전략을 추가하는 방법은 매우 유연합니다. 자체 개발한 백테스팅 엔진과 Backtesting.py 라이브러리 모두를 지원하므로, 사용자의 필요에 맞게 선택할 수 있습니다. 성능과 복잡성을 고려하여 적절한 방식을 선택하세요.
+
+- **자체 백테스팅 엔진**: 복잡한 멀티에셋 포트폴리오 전략에 적합
+- **Backtesting.py**: 빠른 개발과 강력한 시각화 도구가 필요한 경우에 적합
