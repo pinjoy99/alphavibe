@@ -21,10 +21,12 @@ matplotlib.rcParams['axes.unicode_minus'] = False
 from src.api.upbit_api import get_historical_data, parse_period_to_datetime, get_backtest_data
 from src.backtest import (
     backtest_strategy,
-    plot_backtest_results
+    plot_backtest_results,
+    run_backtest_bt  # 새로운 백테스팅 함수 추가
 )
 from src.strategies import create_strategy
 from src.strategies.strategy_registry import StrategyRegistry
+from src.strategies.sma_strategy_bt import SMAStrategyBT  # 새로운 SMA 전략 추가
 from src.notification import (
     send_telegram_message,
     send_telegram_chart,
@@ -121,109 +123,66 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         if strategy_info:
             strategy_params = {p['name']: p['default'] for p in strategy_info['params']}
         
-        # 전략 객체 생성 및 적용
-        strategy_obj = create_strategy(strategy, **strategy_params)
-        if strategy_obj:
-            try:
-                # 전략 적용
-                df = strategy_obj.apply(df)
-                
-                # 백테스팅 결과가 의미 있는지 확인
-                signal_count = (df['signal'] != 0).sum()
-                if signal_count == 0:
-                    print("\n⚠️ 경고: 선택한 기간과 간격에서 거래 신호가 생성되지 않았습니다.")
-                    print("다음 옵션을 시도해보세요:")
-                    print(f"  1. 더 긴 기간 사용: -p 3m 또는 -p 6m")
-                    print(f"  2. 다른 시간 간격 사용: -v minute60 또는 -v day")
-                    print(f"  3. 현재 시장 조건에 더 적합한 다른 전략 시도")
-                
-                # 백테스팅 실행
-                results = backtest_strategy(
-                    df=df, 
-                    strategy_func=strategy_obj.generate_signals, 
+        try:
+            results = None
+            
+            # SMA 전략인 경우 Backtesting.py 사용
+            if strategy == 'sma':
+                results = run_backtest_bt(
+                    df=df,
+                    strategy_class=SMAStrategyBT,
                     initial_capital=initial_capital,
-                    strategy_name=strategy_obj.name,
+                    strategy_name="SMA Strategy",
                     ticker=ticker,
-                    plot_results=False  # 내부에서 차트 생성하지 않도록 설정
+                    short_window=3,  # 3일로 변경
+                    long_window=7    # 7일로 변경
                 )
-                
-                # 결과에 전략 정보 추가
-                results['strategy'] = strategy_obj.name
-                results['strategy_params'] = strategy_obj.params
-                results['period'] = period  # 기간 정보 추가
-                results['interval'] = interval  # 데이터 간격 정보 추가
-                
-                # 결과 출력
-                print("\n백테스팅 결과:")
-                print(f"전략: {strategy_obj.name}")
-                print(f"기간: {results['start_date']} ~ {results['end_date']} ({results['total_days']}일)")
-                print(f"초기 자본금: {results['initial_capital']:,.0f} KRW")
-                print(f"최종 자본금: {results.get('final_capital', results.get('final_asset', 0)):,.0f} KRW")
-                print(f"총 수익률: {results.get('total_return_pct', results.get('return_pct', 0)):.2f}%")
-                print(f"연간 수익률: {results.get('annual_return_pct', 0):.2f}%")
-                print(f"최대 낙폭: {results.get('max_drawdown_pct', 0):.2f}%")
-                print(f"거래 횟수: {results.get('trade_count', results.get('total_trades', 0))}")
-                
-                # 거래 내역 세부 정보 출력 (선택적)
-                print_detailed_trades = True  # 상세 거래 내역 출력 여부
-                if print_detailed_trades and isinstance(results['trade_history'], pd.DataFrame) and not results['trade_history'].empty:
-                    print("\n주요 거래 내역:")
-                    for i, trade in enumerate(results['trade_history'].itertuples()):
-                        if i >= 5:  # 최대 5개만 출력
-                            print(f"... 총 {len(results['trade_history'])}개 거래 중 일부만 표시")
-                            break
-                        
-                        trade_type = "매수" if getattr(trade, 'type', '') == 'buy' else "매도"
-                        position_change = getattr(trade, 'position_change', 0)
-                        position_str = f"포지션 변화: {position_change*100:.1f}%" if position_change else ""
-                        
-                        print(f"{trade.Index.strftime('%Y-%m-%d')} | {trade_type} | " +
-                              f"가격: {getattr(trade, 'price', 0):,.0f} KRW | " +
-                              f"수량: {getattr(trade, 'amount', 0):.8f} | {position_str}")
-                
-                # 그래프 생성 전 unicode minus 설정 다시 적용
-                matplotlib.rcParams['axes.unicode_minus'] = False
-                
-                # 백테스팅 결과 시각화
-                from src.utils.config import BACKTEST_CHART_PATH
-                try:
-                    # 백테스트 결과를 적절히 시각화하는 함수 사용
-                    from src.backtest.result_processor import visualize_results
-                    chart_path = visualize_results(
-                        df=df,
-                        signals=results.get('trade_history', pd.DataFrame()),
-                        cash_history=results.get('cash_history', []),
-                        coin_amount_history=results.get('coin_amount_history', []),
+            else:
+                # 기존 전략은 이전 방식대로 실행
+                strategy_obj = create_strategy(strategy, **strategy_params)
+                if strategy_obj:
+                    # 전략 적용
+                    df = strategy_obj.apply(df)
+                    
+                    # 백테스팅 실행
+                    results = backtest_strategy(
+                        df=df, 
+                        strategy_func=strategy_obj.generate_signals, 
+                        initial_capital=initial_capital,
                         strategy_name=strategy_obj.name,
                         ticker=ticker,
-                        initial_capital=initial_capital,
-                        chart_dir=BACKTEST_CHART_PATH,
-                        period=period,
-                        interval=interval
+                        plot_results=False
                     )
-                    results['chart_path'] = chart_path
-                except Exception as e:
-                    print(f"차트 생성 중 오류 발생: {e}")
-                    chart_path = None
+            
+            if results:
+                # 결과 출력
+                print("\n백테스팅 결과:")
+                print(f"기간: {results['start_date']} ~ {results['end_date']} ({results['total_days']}일)")
+                print(f"초기 자본금: {results['initial_capital']:,.0f} KRW")
+                print(f"최종 자본금: {results.get('final_asset', 0):,.0f} KRW")
+                print(f"총 수익률: {results.get('return_pct', 0):.2f}%")
+                print(f"최대 낙폭: {results.get('max_drawdown', 0):.2f}%")
+                print(f"거래 횟수: {results.get('total_trades', 0)}")
+                
+                if 'win_rate' in results:
+                    print(f"승률: {results['win_rate']:.2f}%")
+                if 'sharpe_ratio' in results:
+                    print(f"샤프 비율: {results['sharpe_ratio']:.2f}")
                 
                 # 텔레그램 알림
                 if enable_telegram:
                     # 결과 메시지 작성
-                    params_str = ", ".join([f"{k}={v}" for k, v in strategy_obj.params.items()])
+                    params_str = ", ".join([f"{k}={v}" for k, v in strategy_params.items()])
                     
                     # 메시지 생성과 전송을 분리된 모듈 함수 사용
-                    result_message = get_telegram_backtest_message(ticker, strategy_obj.name, params_str, results)
+                    result_message = get_telegram_backtest_message(ticker, strategy, params_str, results)
                     
                     # 차트 전송
-                    await send_telegram_chart(chart_path, result_message, enable_telegram, bot)
-            except Exception as e:
-                error_message = f"백테스팅 중 오류 발생: {e}"
-                print(f"\n❌ {error_message}")
-                if enable_telegram:
-                    await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
-        else:
-            error_message = f"유효하지 않은 전략: {strategy}"
-            print(error_message)
+                    await send_telegram_chart(results.get('chart_path'), result_message, enable_telegram, bot)
+                    
+        except Exception as e:
+            error_message = f"백테스팅 중 오류 발생: {e}"
+            print(f"\n❌ {error_message}")
             if enable_telegram:
                 await send_telegram_message(f"❌ {error_message}", enable_telegram, bot)
     else:

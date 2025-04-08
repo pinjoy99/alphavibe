@@ -81,22 +81,22 @@ def plot_price_data(
         style_config = get_default_style_config()
     
     # 가격 차트 그리기
-    ax.plot(df.index, df['close'], color=style_config['colors']['price'], linewidth=1.5, label='가격')
+    ax.plot(df.index, df['Close'], color=style_config['colors']['price'], linewidth=1.5, label='가격')
     
     # 이동평균선 추가
     # 20일 이동평균선 (단기)
     if len(df) >= 20:
-        ma20 = df['close'].rolling(window=20).mean()
+        ma20 = df['Close'].rolling(window=20).mean()
         ax.plot(df.index, ma20, color='#FF9500', linewidth=1.2, label='MA20', alpha=0.8)
     
     # 50일 이동평균선 (중기)
     if len(df) >= 50:
-        ma50 = df['close'].rolling(window=50).mean()
+        ma50 = df['Close'].rolling(window=50).mean()
         ax.plot(df.index, ma50, color='#5AC8FA', linewidth=1.2, label='MA50', alpha=0.8)
     
     # 200일 이동평균선 (장기)
     if len(df) >= 200:
-        ma200 = df['close'].rolling(window=200).mean()
+        ma200 = df['Close'].rolling(window=200).mean()
         ax.plot(df.index, ma200, color='#FFFFFF', linewidth=1.2, label='MA200', alpha=0.8)
     
     # 매수/매도 신호 표시
@@ -107,11 +107,11 @@ def plot_price_data(
             # 매수 신호
             buy_signals = signals[signals['type'] == 'buy']
             if not buy_signals.empty:
-                # 'price' 컬럼이 없으면 'close' 값을 사용
+                # 'price' 컬럼이 없으면 'Close' 값을 사용
                 if 'price' in buy_signals.columns:
                     buy_prices = buy_signals['price']
                 else:
-                    buy_prices = df.loc[buy_signals.index, 'close'].values
+                    buy_prices = df.loc[buy_signals.index, 'Close'].values
                 
                 ax.scatter(
                     buy_signals.index, 
@@ -125,11 +125,11 @@ def plot_price_data(
             # 매도 신호
             sell_signals = signals[signals['type'] == 'sell']
             if not sell_signals.empty:
-                # 'price' 컬럼이 없으면 'close' 값을 사용
+                # 'price' 컬럼이 없으면 'Close' 값을 사용
                 if 'price' in sell_signals.columns:
                     sell_prices = sell_signals['price']
                 else:
-                    sell_prices = df.loc[sell_signals.index, 'close'].values
+                    sell_prices = df.loc[sell_signals.index, 'Close'].values
                 
                 ax.scatter(
                     sell_signals.index, 
@@ -146,7 +146,7 @@ def plot_price_data(
             sell_indices = signals[signals['position'] < 0].index
             
             if len(buy_indices) > 0:
-                buy_prices = df.loc[buy_indices, 'close'].values
+                buy_prices = df.loc[buy_indices, 'Close'].values
                 ax.scatter(
                     buy_indices, 
                     buy_prices, 
@@ -157,7 +157,7 @@ def plot_price_data(
                 )
             
             if len(sell_indices) > 0:
-                sell_prices = df.loc[sell_indices, 'close'].values
+                sell_prices = df.loc[sell_indices, 'Close'].values
                 ax.scatter(
                     sell_indices, 
                     sell_prices, 
@@ -318,7 +318,7 @@ def plot_backtest_results(
                 asset_history = []
                 for i in range(len(df)):
                     if i < len(cash_history) and i < len(coin_amount_history):
-                        price = df['close'].iloc[i]
+                        price = df['Close'].iloc[i]
                         asset = cash_history[i] + coin_amount_history[i] * price
                         asset_history.append(asset)
                 
@@ -339,11 +339,11 @@ def plot_backtest_results(
                     if len(df) > 0:
                         # Buy and Hold 계산: 초기에 모든 자본으로 코인 구매
                         initial_capital = asset_series.iloc[0] if not asset_series.empty else cash_history[0]
-                        initial_price = df['close'].iloc[0]
+                        initial_price = df['Close'].iloc[0]
                         coin_amount_bh = initial_capital / initial_price  # 초기 코인 수량
                         
                         # Buy and Hold 자산 가치 계산
-                        bh_asset_values = df['close'] * coin_amount_bh
+                        bh_asset_values = df['Close'] * coin_amount_bh
                         
                         # Buy and Hold 그래프 추가
                         ax.plot(
@@ -376,7 +376,7 @@ def plot_backtest_results(
                 asset_history = []
                 for i in range(len(df)):
                     if i < len(cash_history) and i < len(coin_amount_history):
-                        price = df['close'].iloc[i]
+                        price = df['Close'].iloc[i]
                         asset = cash_history[i] + coin_amount_history[i] * price
                         asset_history.append(asset)
                 
