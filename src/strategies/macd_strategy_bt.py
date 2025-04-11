@@ -1,3 +1,4 @@
+from backtesting import Strategy
 from backtesting.lib import crossover
 import pandas as pd
 import numpy as np
@@ -102,5 +103,4 @@ class MACDStrategyBT(Strategy):
                 "max": 20
             }
         } 
-from backtesting import Strategy
  

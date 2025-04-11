@@ -22,6 +22,7 @@ from src.api.upbit_api import get_historical_data, parse_period_to_datetime, get
 from src.backtest import run_backtest_bt  # Backtesting.py 백테스팅 함수만 import
 from src.strategies.strategy_registry import StrategyRegistry
 from src.strategies.sma_strategy_bt import SMAStrategyBT  # Backtesting.py 기반 SMA 전략
+from src.strategies.macd_strategy_bt import MACDStrategyBT  # MACD 전략 추가
 from src.notification import (
     send_telegram_message,
     send_telegram_chart,
@@ -130,9 +131,9 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
         try:
             results = None
             
-            # 현재는 SMA 전략만 구현되어 있으므로 SMA 전략만 처리
+            # 전략별 처리
             if strategy == 'sma':
-                # 전략 파라미터 적용
+                # SMA 전략 파라미터 적용
                 short_window = strategy_params.get('short_window', 10)
                 long_window = strategy_params.get('long_window', 30)
                 
@@ -147,8 +148,26 @@ async def run_backtest(bot: Optional[Bot], ticker: str, strategy: str, period: s
                     short_window=short_window,
                     long_window=long_window
                 )
+            elif strategy == 'macd':
+                # MACD 전략 파라미터 적용
+                fast_period = strategy_params.get('fast_period', 12)
+                slow_period = strategy_params.get('slow_period', 26)
+                signal_period = strategy_params.get('signal_period', 9)
+                
+                print(f"Backtesting.py 사용 - MACD 파라미터: fast_period={fast_period}, slow_period={slow_period}, signal_period={signal_period}")
+                
+                results = run_backtest_bt(
+                    df=df,
+                    strategy_class=MACDStrategyBT,
+                    initial_capital=initial_capital,
+                    strategy_name="MACD Strategy",
+                    ticker=ticker,
+                    fast_period=fast_period,
+                    slow_period=slow_period,
+                    signal_period=signal_period
+                )
             else:
-                error_message = f"현재 {strategy} 전략은 지원되지 않습니다. SMA 전략만 사용 가능합니다."
+                error_message = f"현재 {strategy} 전략은 지원되지 않습니다. SMA와 MACD 전략만 사용 가능합니다."
                 print(f"\n⚠️ {error_message}")
                 if enable_telegram:
                     await send_telegram_message(f"⚠️ {error_message}", enable_telegram, bot)
