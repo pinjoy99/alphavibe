@@ -1,0 +1,1709 @@
+{
+  "data": {
+    "data": [
+      {
+        "date": "2025-04-09",
+        "price": 114566000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 325.00187689,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-09",
+        "price": 115300000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 118.25520326,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-09",
+        "price": 116596000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 176.28852271,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-09",
+        "price": 115200000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 160.50295202,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 115684000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 55.39218212,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 116879000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 56.43468419,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121290000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 716.01646542,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 120260000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 334.012838,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121210000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 183.23397225,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 122754000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 172.69340842,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 122665000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 282.64379075,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 122261000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 173.54446965,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121339000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 172.79164424,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121662000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 203.09405389,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121795000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 104.01585364,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121313000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 111.40643338,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 120700000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 121.55892603,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121090000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 53.95267504,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121484000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 60.69795915,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121560000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 57.01126229,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 120802000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 63.85995601,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 120660000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 51.83469442,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121468000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 55.58525159,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 120981000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 42.95585612,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 121168000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 32.66965443,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 120896000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 172.63615874,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 119828000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 141.18920969,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-10",
+        "price": 120094000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 106.1559993,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 117057000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 348.94811144,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118091000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 160.97727575,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 117938000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 77.85483599,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118165000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 42.19405266,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118071000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 46.78400426,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118370000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 29.1349257,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118134000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 46.08393216,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118045000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 49.30672765,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 117936000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 61.05955626,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 116962000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 111.99004054,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118902000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 137.60015054,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 118678000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 83.2205568,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 119338000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 65.39812959,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 119537000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 52.65470662,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 119324000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 58.08461666,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 119689000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 76.91146947,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 119787000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 59.35750185,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 119932000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 109.51935329,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 120671000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 110.02838747,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 121118000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 135.52543641,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 120421000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 91.98806214,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 120397000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 56.72314981,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 121450000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 168.80728716,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-11",
+        "price": 119941000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 169.57194357,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 120472000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 100.07036083,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 120936000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 62.954688,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121990000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 118.15961144,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121496000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 51.30943804,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121523000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 111.1071398,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121639000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 21.62849521,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121680000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 36.87221621,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121537000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 21.12815879,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121450000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 46.06854379,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121599000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 58.9865072,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121361000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 34.42292667,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 120942000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 32.78646655,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 120790000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 35.53127391,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121243000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 38.77889411,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121221000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 21.60310912,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121363000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 35.13579827,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121480000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 28.42129343,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121453000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 59.77639539,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121431000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 33.7972891,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121354000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 23.07030678,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121406000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 21.34645016,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 121746000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 35.59596082,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 122518000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 182.07746219,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-12",
+        "price": 122668000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 198.78240784,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123011000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 120.10094761,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122540000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 68.77616167,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122792000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 41.41566604,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123162000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 23.1651418,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122835000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 27.91665916,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123546000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 67.78981107,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123535000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 55.50404502,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123730000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 69.91176445,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123551000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 63.1883645,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123786000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 81.62823434,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123832000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 150.55669547,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123803000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 73.02165531,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123867000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 55.72619602,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122950000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 100.32355066,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122660000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 71.46135128,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122808000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 36.59626449,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122641000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 31.38160483,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122903000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 60.18889333,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 123260000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 57.56391676,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122914000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 50.78226574,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122810000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 54.48484062,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122716000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 32.89416637,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 121642000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 151.32806535,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-13",
+        "price": 122149000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 77.43061438,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 121723000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 65.08984229,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122069000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 32.81799361,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122745000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 35.8577824,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122912000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 19.98831607,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122336000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 60.62604444,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 121497000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 48.93505571,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 121761000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 63.55622748,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 121115000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 74.12364195,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 121577000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 70.15429323,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122388000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 186.05327095,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122277000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 59.71144498,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 123427000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 188.57943825,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122978000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 67.86203266,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 123160000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 56.84463187,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122791000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 46.12171516,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122589000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 39.29538185,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122716000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 48.5279998,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122830000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 40.87465373,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122466000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 49.8215834,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122628000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 48.70463335,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122928000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 66.10145854,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 123295000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 74.07253723,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 122444000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 129.04918257,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-14",
+        "price": 123412000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 132.67162676,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122298000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 149.61489323,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122544000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 55.11129749,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122850000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 46.52254276,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123049000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 17.55537086,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122844000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 34.85076882,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122933000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 15.35788324,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122919000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 15.46677231,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122601000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 24.88601627,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 122694000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 32.55794884,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123024000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 58.07799953,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123161000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 56.97193937,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123484000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 50.53964104,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123451000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 41.00511807,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123558000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 52.1118613,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123727000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 82.34884475,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123700000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 42.42421868,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123965000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 65.73903885,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 124441000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 88.11626245,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 124604000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 137.8876804,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 124167000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 83.43430176,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 124234000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 48.3621468,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 124399000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 64.91937717,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 124260000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 186.44004497,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-15",
+        "price": 123711000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 159.00407586,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 123433000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 61.15104455,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 123369000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 13.0142844,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 123000000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 42.27720327,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122771000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 36.71228982,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122548000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 41.78693204,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122676000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 51.80370346,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122926000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 47.67973705,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122595000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 49.40882486,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122158000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 64.71649931,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121356000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 159.50120528,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121755000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 66.2598478,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122282000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 64.36647255,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121845000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 34.8864358,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121808000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 46.62614644,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121670000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 48.89321669,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121929000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 44.23640019,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121520000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 37.55963462,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121756000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 102.40513841,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 121739000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 37.91806665,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      },
+      {
+        "date": "2025-04-16",
+        "price": 122014000.0,
+        "shortSMA": null,
+        "longSMA": null,
+        "volume": 45.04242862,
+        "portfolio": 1000000.0,
+        "buySignal": null,
+        "sellSignal": null
+      }
+    ],
+    "summary": {
+      "initialCapital": 1000000.0,
+      "finalCapital": 1000000.0,
+      "totalReturn": 0.0,
+      "maxDrawdown": -0.0,
+      "totalTrades": 0,
+      "winRate": NaN,
+      "profitLossRatio": NaN
+    }
+  },
+  "metadata": {
+    "created_at": "2025-04-16T19:58:43.971671",
+    "max_age": 3600.0,
+    "key_parts": {
+      "strategy": "sma",
+      "initial_capital": 1000000.0,
+      "params": {
+        "short_window": 5,
+        "long_window": 20
+      },
+      "data_hash": 4981851986770192738,
+      "type": "backtest_result"
+    }
+  }
+}

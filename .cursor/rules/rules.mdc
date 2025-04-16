@@ -10,3 +10,4 @@ alwaysApply: true
 3. Update all relevant documentation with every change.  
 4. Write clear and concise git commit messages (preferably under 5 lines).  
 5. Push changes only after completing the above steps.  
+6. 무언가를 설치를 할 때는 루트에 있는 requirements.txt 를 먼저 확인해하고, 가상환경에도 반영해줘.

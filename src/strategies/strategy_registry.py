@@ -37,6 +37,7 @@ class StrategyRegistry:
                         if issubclass(obj, Strategy) and obj != Strategy:
                             # 필수 속성 확인 (CODE, NAME, DESCRIPTION)
                             if all(hasattr(obj, attr) for attr in ['CODE', 'NAME', 'DESCRIPTION']):
+                                print(f"등록: {obj.__name__}, {obj.__module__}, CODE={getattr(obj, 'CODE', None)}")
                                 cls.register(obj)
                             else:
                                 print(f"Warning: 전략 클래스 '{obj.__name__}'에 필수 속성이 누락되었습니다.")
@@ -81,4 +82,4 @@ class StrategyRegistry:
             }
             strategies_info.append(info)
         
-        return strategies_info 
+        return strategies_info

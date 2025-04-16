@@ -28,12 +28,24 @@ AlphaVibe는 이제 강력한 백테스팅 라이브러리인 Backtesting.py를 
 
 ## 설치 및 요구사항
 
-### 요구사항
+### 시스템 요구사항
 
 - Python 3.8 이상
-- pip (Python 패키지 관리자)
+- Node.js 14 이상
+- TA-Lib
 
-### 설치 방법
+### 시스템 라이브러리 설치
+
+```bash
+# Ubuntu/Debian
+sudo apt-get update
+sudo apt-get install -y ta-lib
+
+# macOS
+brew install ta-lib
+```
+
+### 프로젝트 설치
 
 1. 저장소 복제:
    ```bash
@@ -49,20 +61,34 @@ AlphaVibe는 이제 강력한 백테스팅 라이브러리인 Backtesting.py를 
    venv\Scripts\activate  # Windows
    ```
 
-3. 필요 패키지 설치:
+3. 백엔드 의존성 설치:
    ```bash
    pip install -r requirements.txt
    ```
 
-## 사용 방법
+4. 프론트엔드 의존성 설치:
+   ```bash
+   cd src/frontend
+   npm install
+   ```
 
-기본 사용법:
+## 실행 방법
+
+### 백엔드 서버 실행
 
 ```bash
-./run.sh --help  # 사용 가능한 모든 옵션 표시
+# 프로젝트 루트 디렉토리에서
+PYTHONPATH=$PYTHONPATH:. uvicorn src.api.main:app --reload --port 8001
 ```
 
-백테스팅 실행:
+### 프론트엔드 개발 서버 실행
+
+```bash
+cd src/frontend
+npm start
+```
+
+### 백테스팅 실행
 
 ```bash
 # SMA 전략으로 BTC 백테스팅 (3개월, 1억원 초기자본)
@@ -75,12 +101,11 @@ AlphaVibe는 이제 강력한 백테스팅 라이브러리인 Backtesting.py를 
 ./run.sh -b -s sma -p 3m -c BTC,ETH,SOL -i 100000000
 ```
 
-자세한 사용법은 [USAGE_GUIDE.md](./docs/USAGE_GUIDE.md)를 참조하세요.
+## API 문서
 
-## 전략 개발
-
-새로운 전략 개발 방법에 대한 자세한 내용은 [ADDING_STRATEGIES.md](./docs/ADDING_STRATEGIES.md)를 참조하세요.
-Backtesting.py 기반으로 직관적이고 강력한 전략을 쉽게 개발할 수 있습니다.
+FastAPI 서버가 실행되면 다음 URL에서 API 문서를 확인할 수 있습니다:
+- Swagger UI: http://localhost:8001/docs
+- ReDoc: http://localhost:8001/redoc
 
 ## 프로젝트 구조
 

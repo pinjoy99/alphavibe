@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any, List, ClassVar
 
-class SMAStrategyBT(Strategy):
+class SMAStrategy(Strategy):
     """Backtesting.py를 사용한 단순 이동평균선(SMA) 전략 구현"""
     
     # 전략 메타데이터
@@ -13,8 +13,8 @@ class SMAStrategyBT(Strategy):
     DESCRIPTION = "단기/장기 이동평균선의 교차 시점에 매수/매도 신호 발생"
     
     # 전략 파라미터
-    short_window = 10  # 단기 이동평균선 기간
-    long_window = 30   # 장기 이동평균선 기간
+    short_window: ClassVar[int] = 10  # 단기 이동평균선 기간
+    long_window: ClassVar[int] = 30   # 장기 이동평균선 기간
     
     def init(self):
         """전략 초기화 - 지표 계산"""
@@ -89,4 +89,4 @@ class SMAStrategyBT(Strategy):
                 "min": 5,
                 "max": 200
             }
-        } 
+        }

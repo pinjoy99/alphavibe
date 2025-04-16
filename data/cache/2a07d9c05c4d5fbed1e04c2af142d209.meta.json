@@ -1,0 +1,10 @@
+{
+  "created_at": "2025-04-16T19:54:11.393751",
+  "max_age": 3600.0,
+  "key_parts": {
+    "ticker": "BTC",
+    "period": "7d",
+    "interval": "minute60",
+    "type": "backtest_data"
+  }
+}

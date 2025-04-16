@@ -1,104 +1,167 @@
 import pyupbit
 import pandas as pd
-from typing import Optional, List, Dict, Any, Union
-from datetime import datetime
+from typing import Optional, List, Dict, Any, Union, Tuple
+from datetime import datetime, timedelta
 from src.utils import (
     UPBIT_ACCESS_KEY, UPBIT_SECRET_KEY, 
     DEFAULT_INTERVAL, DEFAULT_COUNT,
     parse_period_to_datetime
 )
 import re
+import logging
 
-def get_historical_data(ticker, interval=None, count=None):
-    """
-    Get historical price data
-    
-    Parameters:
-        ticker (str): Ticker symbol (e.g., "KRW-BTC", "KRW-ETH")
-        interval (str): Time interval ("day", "minute1", "minute3", "minute5", "minute10", "minute15", "minute30", "minute60", "minute240", "week", "month")
-        count (int): Number of data points to retrieve
-    """
-    interval = interval or DEFAULT_INTERVAL
-    count = count or DEFAULT_COUNT
-    
-    # Use authenticated client if API keys are set
-    if UPBIT_ACCESS_KEY and UPBIT_SECRET_KEY:
-        upbit = pyupbit.Upbit(UPBIT_ACCESS_KEY, UPBIT_SECRET_KEY)
-        df = pyupbit.get_ohlcv(ticker, interval=interval, count=count)
-    else:
-        df = pyupbit.get_ohlcv(ticker, interval=interval, count=count)
-    
-    return df
+logger = logging.getLogger(__name__)
 
-def get_backtest_data(ticker: str, period_str: str, interval: str = "minute60") -> pd.DataFrame:
+def parse_period_to_datetime(period: str) -> Tuple[datetime, datetime]:
     """
-    백테스팅용 데이터 조회
+    기간 문자열을 시작/종료 datetime으로 변환
     
-    Parameters:
-        ticker (str): 종목 심볼 (예: "KRW-BTC")
-        period_str (str): 기간 문자열 (예: 1d, 3d, 1w, 1m, 3m, 6m, 1y)
-        interval (str): 시간 간격 (기본값: minute60)
-        
+    Args:
+        period: 기간 문자열 (예: '1d', '3d', '1w', '1m', '3m', '6m', '1y')
+    
     Returns:
-        pd.DataFrame: OHLCV 데이터
+        (시작일시, 종료일시) 튜플
     """
-    # 기간 파싱
-    from_date = parse_period_to_datetime(period_str)
-    to_date = datetime.now()
+    end_date = datetime.now()
     
-    # interval 형식 변환 (1h -> minute60와 같은 변환)
-    if interval == "1h":
-        interval = "minute60"
-    elif interval == "4h":
-        interval = "minute240"
+    # 기간에 따른 시작일 계산
+    period_map = {
+        'd': 'days',
+        'w': 'weeks',
+        'm': 'months',
+        'y': 'years'
+    }
     
-    # 사용자가 지정한 interval을 우선 사용
-    user_interval = interval
-    
-    # 기간에 따라 자동으로 간격 선택 (사용자가 명시적으로 interval을 지정하지 않은 경우에만)
-    match = re.match(r'(\d+)([dwmy])', period_str)
-    if match and user_interval == "minute60" and user_interval == interval:  # 사용자가 기본값을 사용한 경우에만 자동 조정
-        value, unit = int(match.group(1)), match.group(2)
-        
-        # 6개월 이상인 경우 일봉 데이터 사용
-        if (unit == 'y') or (unit == 'm' and value >= 6):
-            interval = "day"
-        # 3~6개월인 경우 4시간 데이터 사용
-        elif (unit == 'm' and value >= 3) or (unit == 'w' and value >= 12):
-            interval = "minute240"
-        # 1~3개월인 경우 1시간 데이터 사용
-        elif (unit == 'm' and value >= 1) or (unit == 'w' and value >= 4):
-            interval = "minute60"
-        # 그 이하는 기본값 사용 (minute60)
-    else:
-        # 사용자가 지정한 interval 사용
-        interval = user_interval
-    
-    print(f"데이터 조회 기간: {from_date.strftime('%Y-%m-%d')} ~ {to_date.strftime('%Y-%m-%d')} (간격: {interval})")
-    
-    # 데이터 조회
     try:
-        # pyupbit.get_ohlcv_from은 toDatetime 매개변수를 지원하지 않음
-        # 데이터를 먼저 가져온 후 날짜 범위로 필터링
-        df = pyupbit.get_ohlcv_from(ticker, interval=interval, fromDatetime=from_date)
+        amount = int(period[:-1])
+        unit = period[-1].lower()
         
-        # 가져온 데이터를 to_date 이하로 필터링
-        if df is not None and not df.empty:
-            df = df[df.index <= to_date]
-            
-            # 실제 조회된 데이터 기간 출력
-            actual_from = df.index[0].strftime('%Y-%m-%d')
-            actual_to = df.index[-1].strftime('%Y-%m-%d')
-            print(f"실제 조회된 데이터 기간: {actual_from} ~ {actual_to} (총 {len(df)}개 데이터)")
+        if unit not in period_map:
+            raise ValueError(f"지원하지 않는 기간 단위: {unit}")
+        
+        if unit == 'm':
+            start_date = end_date - pd.DateOffset(months=amount)
+        elif unit == 'y':
+            start_date = end_date - pd.DateOffset(years=amount)
         else:
-            print("데이터 없음")
-            df = pd.DataFrame()
+            delta = timedelta(**{period_map[unit]: amount})
+            start_date = end_date - delta
             
-    except Exception as e:
-        print(f"데이터 조회 오류: {e}")
-        df = pd.DataFrame()
+        return start_date, end_date
+        
+    except (ValueError, IndexError) as e:
+        logger.error(f"기간 파싱 중 에러 발생: {str(e)}")
+        raise ValueError(f"잘못된 기간 형식: {period}")
+
+def get_historical_data(ticker: str, period: str, interval: str = 'minute60') -> Optional[pd.DataFrame]:
+    """
+    업비트에서 히스토리컬 데이터 조회
     
-    return df
+    Args:
+        ticker: 코인 심볼 (예: 'BTC')
+        period: 기간 (예: '1d', '3d', '1w', '1m', '3m', '6m', '1y')
+        interval: 데이터 간격 (예: 'minute1', 'minute3', 'minute5', 'minute15', 'minute60', 'day')
+    
+    Returns:
+        OHLCV 데이터프레임 또는 None (에러 발생 시)
+    """
+    try:
+        logger.info(f"데이터 조회 시작: {ticker}, 기간: {period}, 간격: {interval}")
+        
+        # 마켓 코드 생성 (KRW-BTC 형식)
+        market = f"KRW-{ticker}"
+        
+        # 시작/종료일 계산
+        start_date, end_date = parse_period_to_datetime(period)
+        
+        # 데이터 조회
+        if interval == 'day':
+            df = pyupbit.get_ohlcv(market, interval='day', to=end_date, count=500)
+        else:
+            # interval이 'minute60'와 같은 형식일 경우
+            minutes = int(interval.replace('minute', ''))
+            df = pyupbit.get_ohlcv(market, interval=interval, to=end_date, count=500)
+        
+        if df is None or df.empty:
+            logger.warning(f"데이터가 없습니다: {ticker}")
+            return None
+            
+        # 기간에 맞게 데이터 필터링
+        df = df[df.index >= start_date]
+        
+        # 컬럼명 변경
+        df.columns = ['Open', 'High', 'Low', 'Close', 'Volume', 'Value']
+        
+        logger.info(f"데이터 조회 완료: {len(df)} 개 데이터 포인트")
+        
+        return df
+        
+    except Exception as e:
+        logger.error(f"데이터 조회 중 에러 발생: {str(e)}")
+        return None
+
+def get_backtest_data(ticker: str, period: str, interval: str = 'minute60') -> Optional[pd.DataFrame]:
+    """
+    백테스팅용 데이터 조회 및 전처리 (캐싱 적용)
+    
+    Args:
+        ticker: 코인 심볼
+        period: 기간
+        interval: 데이터 간격
+    
+    Returns:
+        전처리된 OHLCV 데이터프레임 또는 None
+    """
+    try:
+        from src.utils.cache_manager import CacheManager
+        from datetime import timedelta
+        
+        # 캐시 매니저 초기화
+        cache_manager = CacheManager()
+        
+        # 캐시 키 구성
+        cache_key = {
+            "ticker": ticker,
+            "period": period,
+            "interval": interval,
+            "type": "backtest_data"
+        }
+        
+        # 캐시에서 데이터 로드 시도 (최대 1시간 유효)
+        cached_data = cache_manager.load_from_cache(
+            cache_key,
+            extension="parquet",
+            max_age=timedelta(hours=1)
+        )
+        
+        if cached_data is not None:
+            logger.info(f"캐시에서 데이터 로드: {ticker}")
+            return cached_data
+            
+        # 데이터 조회
+        df = get_historical_data(ticker, period, interval)
+        if df is None:
+            return None
+            
+        # 필요한 컬럼만 선택
+        df = df[['Open', 'High', 'Low', 'Close', 'Volume']]
+        
+        # 결측치 처리
+        df = df.dropna()
+        
+        # 캐시에 저장
+        cache_manager.save_to_cache(
+            df,
+            cache_key,
+            extension="parquet",
+            max_age=timedelta(hours=1)
+        )
+        
+        return df
+        
+    except Exception as e:
+        logger.error(f"백테스트 데이터 준비 중 에러 발생: {str(e)}")
+        return None
 
 def get_account_info() -> Optional[List[Dict[str, Any]]]:
     """
